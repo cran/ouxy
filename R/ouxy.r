@@ -92,11 +92,10 @@ oubmbmmodel<-function(model.params,reg.params,root=root,tree=tree){
 
     ###
     INT1var<-sigmasq.theta*(exp(2*alpha.y*treelength[index])-1)/(2*alpha.y)
-    INT1<-exp(-alpha.y*treelength[index])* rnorm(n=1,mean=0,sd=sqrt(INT1var))
+    INT1<-exp(-alpha.y*treelength[index])* rnorm(n=1,mean=optimnodestates[des[index]],sd=sqrt(INT1var))
 
     ###
-    #fexpr<-expression(exp(alpha.y*t)*w)
-    fexpr<-expression(exp(t/2)*w) #assume alpha.y = 0.5
+    fexpr<-expression(exp(alpha.y*t)*w)
     res<-st.int(fexpr,type="ito",M=1,lower=0,upper=treelength[index])
     INT2<-tau*exp(-alpha.y*treelength[index])*median(res$X)
 
@@ -262,11 +261,11 @@ ououbmmodel<-function(model.params,reg.params,root=root,tree=tree){
     INT2<-tau*exp(-alpha.y*treelength[index])*median(res$X)
 
     ynodestates[des[index]]<-ynodestates[anc[index]] + INT1 + INT2
-    }
+  }
 
   simtrait<-ynodestates[1:n]
   return(list(y=simtrait,x1=x1nodestates[1:n],x2=x2nodestates[1:n]))
-  }
+}
 
 
 #' Draw prior samples for OUOUBM model
@@ -297,77 +296,77 @@ ououbmmodel<-function(model.params,reg.params,root=root,tree=tree){
 #'ououbmprior(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params)
 #'
 #'
-  ououbmprior<-function(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params){
-    alpha.y.min <-prior.model.params["alpha.y.min"]
-    alpha.y.max <-prior.model.params["alpha.y.max"]
-    alpha.x.min <- prior.model.params["alpha.x.min"]
-    alpha.x.max <- prior.model.params["alpha.x.max"]
-    theta.x.min <-prior.model.params["theta.x.min"]
-    theta.x.max <- prior.model.params["theta.x.max"]
-    sigmasq.x.min <-prior.model.params["sigmasq.x.min"]
-    sigmasq.x.max <- prior.model.params["sigmasq.x.max"]
-    tau.min <- prior.model.params["tau.min"]
-    tau.max <- prior.model.params["tau.max"]
+ououbmprior<-function(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params){
+  alpha.y.min <-prior.model.params["alpha.y.min"]
+  alpha.y.max <-prior.model.params["alpha.y.max"]
+  alpha.x.min <- prior.model.params["alpha.x.min"]
+  alpha.x.max <- prior.model.params["alpha.x.max"]
+  theta.x.min <-prior.model.params["theta.x.min"]
+  theta.x.max <- prior.model.params["theta.x.max"]
+  sigmasq.x.min <-prior.model.params["sigmasq.x.min"]
+  sigmasq.x.max <- prior.model.params["sigmasq.x.max"]
+  tau.min <- prior.model.params["tau.min"]
+  tau.max <- prior.model.params["tau.max"]
 
-    alpha.y<-runif(n=1,min=alpha.y.min,max=alpha.y.max)
-    alpha.x<-runif(n=1,min=alpha.x.min,max=alpha.x.max)
-    theta.x<-runif(n=1,min=theta.x.min,max=theta.x.max)
-    sigmasq.x<-runif(n=1,min=sigmasq.x.min,max=sigmasq.x.max)
-    tau<-runif(n=1,min=tau.min,max=tau.max)
+  alpha.y<-runif(n=1,min=alpha.y.min,max=alpha.y.max)
+  alpha.x<-runif(n=1,min=alpha.x.min,max=alpha.x.max)
+  theta.x<-runif(n=1,min=theta.x.min,max=theta.x.max)
+  sigmasq.x<-runif(n=1,min=sigmasq.x.min,max=sigmasq.x.max)
+  tau<-runif(n=1,min=tau.min,max=tau.max)
 
-    b0.min<-prior.reg.params[1]
-    b0.max<-prior.reg.params[2]
-    b1.min<-prior.reg.params[3]
-    b1.max<-prior.reg.params[4]
-    b2.min<-prior.reg.params[5]
-    b2.max<-prior.reg.params[6]
-    b0<-runif(n=1, min=b0.min, max=b0.max)
-    b1<-runif(n=1, min=b1.min, max=b1.max)
-    b2<-runif(n=1, min=b2.min, max=b2.max)
+  b0.min<-prior.reg.params[1]
+  b0.max<-prior.reg.params[2]
+  b1.min<-prior.reg.params[3]
+  b1.max<-prior.reg.params[4]
+  b2.min<-prior.reg.params[5]
+  b2.max<-prior.reg.params[6]
+  b0<-runif(n=1, min=b0.min, max=b0.max)
+  b1<-runif(n=1, min=b1.min, max=b1.max)
+  b2<-runif(n=1, min=b2.min, max=b2.max)
 
-    model.params<-c(alpha.y, alpha.x, theta.x, sigmasq.x, tau)
-    reg.params<- c(b0, b1, b2)
+  model.params<-c(alpha.y, alpha.x, theta.x, sigmasq.x, tau)
+  reg.params<- c(b0, b1, b2)
 
-    return(list(model.params=model.params, reg.params=reg.params))
-  }
+  return(list(model.params=model.params, reg.params=reg.params))
+}
 
 
 ### OUBMCIR
-  #' Simulate traits under OUBMCIR model given a set of parameters
-  #'
-  #' Simulate traits under OUBMCIR model given a set of model parameters, regression parameters, tree and ancestral values.
-  #'
-  #' The model requires user to input  model parameters \eqn{\alpha_y,\sigma^2_x,\alpha_\tau,\theta_\tau,\sigma^2_\tau} and regression parameters \eqn{b_0,b_1,b_2}, a tree object, trait dataset (one response, two covariate), ancestral values(root) which is estimated by BM or OU model from \code{\link[geiger:fitContinuous]{geiger}}. Then the algorithm starts from the root and apply the tree traversal algorithm to simulate trait on each node according the OUOUBM dynamics.
-  #'
-  #' @param model.params  A vector of model parameters including alpha.y: force parameter of response trait, sigmasq.x: rate parameter of covariate, alpha.tau: force parameter of rate, theta.tau optimum parameter of rate, sigmasq.tau: rate parameter of rate
-  #'
-  #' @param reg.params A vector of regression paramters including  b0: intercept parameter of regression, b1: slope parameter of first covariate,  b2: slope paramter of the second covariate
-  #' @param root A vector of numerical values for root of species estimated from \code{OUprior}
-  #' @param tree  An ape: tree object stored in phylo format
-  #'
-  #' @return Returns the trait vectors \eqn{Y=(y_1,y_2,\cdots,y_n)', X_1=(x_{1,1},x_{1.2},\cdots,x_{1,n})',X_2=(x_{2,1},x_{2,2},\cdots,x_{2,n})'} simulated from the model.
-  #'
-  #' @export
-  #'
-  #' @references
-  #'  \enumerate{
-  #'   \item Jhwueng, D-C. (2019) Statistical modeling for adaptive trait evolution. Under review.
-  #'   \item Jhwueng, D-C., and Vasileios Maroulas. "Adaptive trait evolution in random environment." Journal of Applied Statistics 43.12 (2016): 2310-2324.
-  #'   \item Hansen, Thomas F., Jason Pienaar, and Steven Hecht Orzack. "A comparative method for studying adaptation to a randomly evolving environment." Evolution: International Journal of Organic Evolution 62.8 (2008): 1965-1977.
-  #' }
-  #'
-  #' @examples
-  #' library(ape)
-  #' tree<-rcoal(5)
-  #' tree<-reorder(tree,"postorder")
-  #' root<-list(y.ou.sigmsq=1 ,y.ou.root=0, x1.ou.root=0, x2.ou.root=0,x1.bm.root=0, x2.bm.root=0)
-  #' model.params<-c(0.5,0.25,0.3,1,0.2)
-  #' names(model.params)<-c("alpha.y","alpha.x","theta.x","sigmasq.x","sigmasq.tau")
-  #' reg.params<-c(0,1,1)
-  #' names(reg.params)<-c("b0","b1","b2")
-  #' oubmcirmodel(model.params,reg.params,root=root,tree=tree)
-  #'
-  oubmcirmodel<-function(model.params,reg.params,root=root,tree=tree){
+#' Simulate traits under OUBMCIR model given a set of parameters
+#'
+#' Simulate traits under OUBMCIR model given a set of model parameters, regression parameters, tree and ancestral values.
+#'
+#' The model requires user to input  model parameters \eqn{\alpha_y,\sigma^2_x,\alpha_\tau,\theta_\tau,\sigma^2_\tau} and regression parameters \eqn{b_0,b_1,b_2}, a tree object, trait dataset (one response, two covariate), ancestral values(root) which is estimated by BM or OU model from \code{\link[geiger:fitContinuous]{geiger}}. Then the algorithm starts from the root and apply the tree traversal algorithm to simulate trait on each node according the OUOUBM dynamics.
+#'
+#' @param model.params  A vector of model parameters including alpha.y: force parameter of response trait, sigmasq.x: rate parameter of covariate, alpha.tau: force parameter of rate, theta.tau optimum parameter of rate, sigmasq.tau: rate parameter of rate
+#'
+#' @param reg.params A vector of regression paramters including  b0: intercept parameter of regression, b1: slope parameter of first covariate,  b2: slope paramter of the second covariate
+#' @param root A vector of numerical values for root of species estimated from \code{OUprior}
+#' @param tree  An ape: tree object stored in phylo format
+#'
+#' @return Returns the trait vectors \eqn{Y=(y_1,y_2,\cdots,y_n)', X_1=(x_{1,1},x_{1.2},\cdots,x_{1,n})',X_2=(x_{2,1},x_{2,2},\cdots,x_{2,n})'} simulated from the model.
+#'
+#' @export
+#'
+#' @references
+#'  \enumerate{
+#'   \item Jhwueng, D-C. (2019) Statistical modeling for adaptive trait evolution. Under review.
+#'   \item Jhwueng, D-C., and Vasileios Maroulas. "Adaptive trait evolution in random environment." Journal of Applied Statistics 43.12 (2016): 2310-2324.
+#'   \item Hansen, Thomas F., Jason Pienaar, and Steven Hecht Orzack. "A comparative method for studying adaptation to a randomly evolving environment." Evolution: International Journal of Organic Evolution 62.8 (2008): 1965-1977.
+#' }
+#'
+#' @examples
+#' library(ape)
+#' tree<-rcoal(5)
+#' tree<-reorder(tree,"postorder")
+#' root<-list(y.ou.sigmsq=1 ,y.ou.root=0, x1.ou.root=0, x2.ou.root=0,x1.bm.root=0, x2.bm.root=0)
+#' model.params<-c(0.5,0.25,0.3,1,0.2)
+#' names(model.params)<-c("alpha.y","alpha.x","theta.x","sigmasq.x","sigmasq.tau")
+#' reg.params<-c(0,1,1)
+#' names(reg.params)<-c("b0","b1","b2")
+#' oubmcirmodel(model.params,reg.params,root=root,tree=tree)
+#'
+oubmcirmodel<-function(model.params,reg.params,root=root,tree=tree){
   alpha.y<-model.params[1]
   sigmasq.x<-model.params[2]
   alpha.tau<-model.params[3]
@@ -444,112 +443,112 @@ ououbmmodel<-function(model.params,reg.params,root=root,tree=tree){
   }
   simtrait<-ynodestates[1:n]
   return(list(y=simtrait,x1=x1nodestates[1:n],x2=x2nodestates[1:n]))
-  }
+}
 
-  #' Draw prior samples for OUBMCIR model
-  #'
-  #' Simulate sample for parameters in OUBMCIR model given a set of hyper parameters
-  #'
-  #' The function requires user to input hyper parameters for \eqn{\alpha_y,\sigma^2_x,\alpha_\tau, \theta_\tau,\sigma^2_\tau} and hyper parameters for regression parameters \eqn{b_0,b_1,b_2} from uniform distribution with its minimum and maximum values.
-  #'
-  #' @param prior.model.params  A vectors of hyper parameters for model parameter containing (alpha.y.min, alpha.y.max) for alpha.y, (sigmasq.x.min, sigmasq.x.max) for sigmasq.x, (alpha.tau.min, alpha.tau.max) for alpha.tau, (theta.tau.min, theta.tau.max) for theta_tau, (sigmasq.tau.min, sigmasq.tau.max) for rate parameter of tau
-  #' @param prior.reg.params A vector of hyper paramter for regression parameters. (b0.min,b0.max) for b0, (b1.min,b1.max) for b1,  (b2.min,b2.max) for b2
-  #'
-  #' @return Returns the  samples of model parameters and regression parameter
-  #'
-  #' @export
-  #'
-  #' @examples
-  #'
-  #'prior.model.params<-c(0,3,0,3,0,1,0,3,0,2,0,1.5)
-  #'
-  #'
-  #'names(prior.model.params)<-c(
-  #'
-  #'"alpha.y.min","alpha.y.max","sigmasq.x.min","sigmasq.x.max",
-  #'
-  #'"alpha.tau.min","alpha.tau.max","theta.tau.min","theta.tau.max",
-  #'
-  #'"sigmasq.tau.min","sigmasq.tau.max")
-  #'prior.reg.params<-c(-3, 3, -3, 3, -3, 3)
-  #'names(prior.reg.params)<-c("b0.min", "b0.max", "b1.min", "b1.max", "b2.min", "b2.max")
-  #'oubmcirprior(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params)
-  #'
-  #'
-  oubmcirprior<-function(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params){
-    alpha.y.min <-prior.model.params["alpha.y.min"]
-    alpha.y.max <-prior.model.params["alpha.y.max"]
-    sigmasq.x.min <-prior.model.params["sigmasq.x.min"]
-    sigmasq.x.max <- prior.model.params["sigmasq.x.max"]
-    alpha.tau.min <- prior.model.params["alpha.tau.min"]
-    alpha.tau.max <- prior.model.params["alpha.tau.max"]
-    theta.tau.min <- prior.model.params["theta.tau.min"]
-    theta.tau.max <- prior.model.params["theta.tau.max"]
-    sigmasq.tau.min <- prior.model.params["sigmasq.tau.min"]
-    sigmasq.tau.max <- prior.model.params["sigmasq.tau.max"]
+#' Draw prior samples for OUBMCIR model
+#'
+#' Simulate sample for parameters in OUBMCIR model given a set of hyper parameters
+#'
+#' The function requires user to input hyper parameters for \eqn{\alpha_y,\sigma^2_x,\alpha_\tau, \theta_\tau,\sigma^2_\tau} and hyper parameters for regression parameters \eqn{b_0,b_1,b_2} from uniform distribution with its minimum and maximum values.
+#'
+#' @param prior.model.params  A vectors of hyper parameters for model parameter containing (alpha.y.min, alpha.y.max) for alpha.y, (sigmasq.x.min, sigmasq.x.max) for sigmasq.x, (alpha.tau.min, alpha.tau.max) for alpha.tau, (theta.tau.min, theta.tau.max) for theta_tau, (sigmasq.tau.min, sigmasq.tau.max) for rate parameter of tau
+#' @param prior.reg.params A vector of hyper paramter for regression parameters. (b0.min,b0.max) for b0, (b1.min,b1.max) for b1,  (b2.min,b2.max) for b2
+#'
+#' @return Returns the  samples of model parameters and regression parameter
+#'
+#' @export
+#'
+#' @examples
+#'
+#'prior.model.params<-c(0,3,0,3,0,1,0,3,0,2,0,1.5)
+#'
+#'
+#'names(prior.model.params)<-c(
+#'
+#'"alpha.y.min","alpha.y.max","sigmasq.x.min","sigmasq.x.max",
+#'
+#'"alpha.tau.min","alpha.tau.max","theta.tau.min","theta.tau.max",
+#'
+#'"sigmasq.tau.min","sigmasq.tau.max")
+#'prior.reg.params<-c(-3, 3, -3, 3, -3, 3)
+#'names(prior.reg.params)<-c("b0.min", "b0.max", "b1.min", "b1.max", "b2.min", "b2.max")
+#'oubmcirprior(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params)
+#'
+#'
+oubmcirprior<-function(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params){
+  alpha.y.min <-prior.model.params["alpha.y.min"]
+  alpha.y.max <-prior.model.params["alpha.y.max"]
+  sigmasq.x.min <-prior.model.params["sigmasq.x.min"]
+  sigmasq.x.max <- prior.model.params["sigmasq.x.max"]
+  alpha.tau.min <- prior.model.params["alpha.tau.min"]
+  alpha.tau.max <- prior.model.params["alpha.tau.max"]
+  theta.tau.min <- prior.model.params["theta.tau.min"]
+  theta.tau.max <- prior.model.params["theta.tau.max"]
+  sigmasq.tau.min <- prior.model.params["sigmasq.tau.min"]
+  sigmasq.tau.max <- prior.model.params["sigmasq.tau.max"]
 
-    alpha.y<-runif(n=1,min=alpha.y.min,max=alpha.y.max)
-    sigmasq.x<-runif(n=1,min=sigmasq.x.min,max=sigmasq.x.max)
-    alpha.tau <- runif(n=1,min=alpha.tau.min,max=alpha.tau.max)
-    theta.tau <- runif(n=1,min=theta.tau.min,max=theta.tau.max)
-    sigmasq.tau<-runif(n=1,min=sigmasq.tau.min,max=sigmasq.tau.max)
+  alpha.y<-runif(n=1,min=alpha.y.min,max=alpha.y.max)
+  sigmasq.x<-runif(n=1,min=sigmasq.x.min,max=sigmasq.x.max)
+  alpha.tau <- runif(n=1,min=alpha.tau.min,max=alpha.tau.max)
+  theta.tau <- runif(n=1,min=theta.tau.min,max=theta.tau.max)
+  sigmasq.tau<-runif(n=1,min=sigmasq.tau.min,max=sigmasq.tau.max)
 
-    b0.min<-prior.reg.params[1]
-    b0.max<-prior.reg.params[2]
-    b1.min<-prior.reg.params[3]
-    b1.max<-prior.reg.params[4]
-    b2.min<-prior.reg.params[5]
-    b2.max<-prior.reg.params[6]
-    b0<-runif(n=1, min=b0.min, max=b0.max)
-    b1<-runif(n=1, min=b1.min, max=b1.max)
-    b2<-runif(n=1, min=b2.min, max=b2.max)
+  b0.min<-prior.reg.params[1]
+  b0.max<-prior.reg.params[2]
+  b1.min<-prior.reg.params[3]
+  b1.max<-prior.reg.params[4]
+  b2.min<-prior.reg.params[5]
+  b2.max<-prior.reg.params[6]
+  b0<-runif(n=1, min=b0.min, max=b0.max)
+  b1<-runif(n=1, min=b1.min, max=b1.max)
+  b2<-runif(n=1, min=b2.min, max=b2.max)
 
-    model.params<-c(alpha.y, sigmasq.x, alpha.tau, theta.tau, sigmasq.tau)
-    reg.params<- c(b0, b1, b2)
+  model.params<-c(alpha.y, sigmasq.x, alpha.tau, theta.tau, sigmasq.tau)
+  reg.params<- c(b0, b1, b2)
 
-    return(list(model.params=model.params, reg.params=reg.params))
-  }
+  return(list(model.params=model.params, reg.params=reg.params))
+}
 
 
 ### OUOUCIR
-  #' Simulate traits under OUBMCIR model given a set of parameters
-  #'
-  #' Simulate traits under OUBMCIR model given a set of model parameters, regression parameters, tree and ancestral values.
-  #'
-  #' The model requires user to input  model parameters \eqn{\alpha_y,\alpha_x,\theta_x,\sigma^2_x,\alpha_\tau,\theta_\tau,\sigma^2_\tau} and regression parameters \eqn{b_0,b_1,b_2}, a tree object, trait dataset (one response, two covariate), ancestral values(root) which is estimated by BM or OU model from \code{\link[geiger:fitContinuous]{geiger}}. Then the algorithm starts from the root and apply the tree traversal algorithm to simulate trait on each node according the OUOUBM dynamics.
-  #'
-  #' @param model.params  A vector of model parameters including alpha.y: force parameter of response trait, alpha.x: force parameter of covariate, theta.x" optimum parameter of covariate, sigmasq.x: rate parameter of covariate, alpha.tau: force parameter of rate, theta.tau optimum parameter of rate, sigmasq.tau: rate parameter of rate
-  #'
-  #' @param reg.params A vector of regression paramters including  b0: intercept parameter of regression, b1: slope parameter of first covariate,  b2: slope paramter of the second covariate
-  #' @param root A vector of numerical values for root of species estimated from \code{OUprior}
-  #' @param tree  An ape: tree object stored in phylo format
-  #'
-  #'
-  #' @return Returns the trait vectors \eqn{Y=(y_1,y_2,\cdots,y_n)', X_1=(x_{1,1},x_{1.2},\cdots,x_{1,n})',X_2=(x_{2,1},x_{2,2},\cdots,x_{2,n})'} simulated from the model.
-  #'
-  #' @export
-  #'
-  #' @references
-  #'  \enumerate{
-  #'   \item Jhwueng, D-C. (2019) Statistical modeling for adaptive trait evolution. Under review.
-  #'   \item Jhwueng, D-C., and Vasileios Maroulas. "Adaptive trait evolution in random environment." Journal of Applied Statistics 43.12 (2016): 2310-2324.
-  #'   \item Hansen, Thomas F., Jason Pienaar, and Steven Hecht Orzack. "A comparative method for studying adaptation to a randomly evolving environment." Evolution: International Journal of Organic Evolution 62.8 (2008): 1965-1977.
-  #' }
-  #'
-  #' @examples
-  #' library(ape)
-  #' tree<-rcoal(5)
-  #' tree<-reorder(tree,"postorder")
-  #' root<-list(y.ou.sigmsq=1 ,y.ou.root=0, x1.ou.root=0, x2.ou.root=0,x1.bm.root=0, x2.bm.root=0)
-  #' model.params<-c(0.5,0.25,0,1,0.125,0.15,0.2)
-  #' names(model.params)<-c("alpha.y","alpha.x","theta.x","sigmasq.x"
-  #'
-  #',"alpha.tau","theta.tau","sigmasq.tau")
-  #' reg.params<-c(0,1,1)
-  #' names(reg.params)<-c("b0","b1","b2")
-  #' ououcirmodel(model.params,reg.params,root=root,tree=tree)
-  #'
-  ououcirmodel<-function(model.params,reg.params,root=root,tree=tree){
+#' Simulate traits under OUBMCIR model given a set of parameters
+#'
+#' Simulate traits under OUBMCIR model given a set of model parameters, regression parameters, tree and ancestral values.
+#'
+#' The model requires user to input  model parameters \eqn{\alpha_y,\alpha_x,\theta_x,\sigma^2_x,\alpha_\tau,\theta_\tau,\sigma^2_\tau} and regression parameters \eqn{b_0,b_1,b_2}, a tree object, trait dataset (one response, two covariate), ancestral values(root) which is estimated by BM or OU model from \code{\link[geiger:fitContinuous]{geiger}}. Then the algorithm starts from the root and apply the tree traversal algorithm to simulate trait on each node according the OUOUBM dynamics.
+#'
+#' @param model.params  A vector of model parameters including alpha.y: force parameter of response trait, alpha.x: force parameter of covariate, theta.x" optimum parameter of covariate, sigmasq.x: rate parameter of covariate, alpha.tau: force parameter of rate, theta.tau optimum parameter of rate, sigmasq.tau: rate parameter of rate
+#'
+#' @param reg.params A vector of regression paramters including  b0: intercept parameter of regression, b1: slope parameter of first covariate,  b2: slope paramter of the second covariate
+#' @param root A vector of numerical values for root of species estimated from \code{OUprior}
+#' @param tree  An ape: tree object stored in phylo format
+#'
+#'
+#' @return Returns the trait vectors \eqn{Y=(y_1,y_2,\cdots,y_n)', X_1=(x_{1,1},x_{1.2},\cdots,x_{1,n})',X_2=(x_{2,1},x_{2,2},\cdots,x_{2,n})'} simulated from the model.
+#'
+#' @export
+#'
+#' @references
+#'  \enumerate{
+#'   \item Jhwueng, D-C. (2019) Statistical modeling for adaptive trait evolution. Under review.
+#'   \item Jhwueng, D-C., and Vasileios Maroulas. "Adaptive trait evolution in random environment." Journal of Applied Statistics 43.12 (2016): 2310-2324.
+#'   \item Hansen, Thomas F., Jason Pienaar, and Steven Hecht Orzack. "A comparative method for studying adaptation to a randomly evolving environment." Evolution: International Journal of Organic Evolution 62.8 (2008): 1965-1977.
+#' }
+#'
+#' @examples
+#' library(ape)
+#' tree<-rcoal(5)
+#' tree<-reorder(tree,"postorder")
+#' root<-list(y.ou.sigmsq=1 ,y.ou.root=0, x1.ou.root=0, x2.ou.root=0,x1.bm.root=0, x2.bm.root=0)
+#' model.params<-c(0.5,0.25,0,1,0.125,0.15,0.2)
+#' names(model.params)<-c("alpha.y","alpha.x","theta.x","sigmasq.x"
+#'
+#',"alpha.tau","theta.tau","sigmasq.tau")
+#' reg.params<-c(0,1,1)
+#' names(reg.params)<-c("b0","b1","b2")
+#' ououcirmodel(model.params,reg.params,root=root,tree=tree)
+#'
+ououcirmodel<-function(model.params,reg.params,root=root,tree=tree){
   alpha.y<-model.params[1]
   alpha.x<-model.params[2]
   theta.x<-model.params[3]
@@ -638,83 +637,83 @@ ououbmmodel<-function(model.params,reg.params,root=root,tree=tree){
     c <- sqrt(sigmasq.tau)*outer.int.sum
     INT2 <- (a + b + c)
     ynodestates[des[index]]<-ynodestates[anc[index]] + INT1 + INT2
-    }
+  }
   simtrait<-ynodestates[1:n]
   return(list(y=simtrait,x1=x1nodestates[1:n],x2=x2nodestates[1:n]))
-  }
+}
 
-  #' Draw prior samples for OUOUCIR model
-  #'
-  #' Simulate sample for parameters in OUOUCIR model given a set of hyper parameters
-  #'
-  #' The function requires user to input hyper parameters for \eqn{\alpha_y,\alpha_x,\theta_x, \sigma^2_x,\alpha_\tau, \theta_\tau,\sigma^2_\tau} and hyper parameters for regression parameters \eqn{b_0,b_1,b_2} from uniform distribution with its minimum and maximum values.
-  #'
-  #' @param prior.model.params  A vectors of hyper parameters for model parameter containing (alpha.y.min, alpha.y.max) for alpha.y, (alpha.x.min, alpha.x.max) for alpha.x, (theta.x.min, theta.x.max) for theta.x, (sigmasq.x.min, sigmasq.x.max) for sigmasq.x, (alpha.tau.min, alpha.tau.max) for alpha.tau, (theta.tau.min, theta.tau.max) for theta_tau, (sigmasq.tau.min, sigmasq.tau.max) for rate parameter of tau
-  #' @param prior.reg.params A vector of hyper paramter for regression parameters. (b0.min,b0.max) for b0, (b1.min,b1.max) for b1,  (b2.min,b2.max) for b2
-  #'
-  #' @return Returns the  samples of model parameters and regression parameter
-  #'
-  #' @export
-  #'
-  #' @examples
-  #'
-  #'prior.model.params<-c(0,3,0,3,-2,2,0,1,0,3,0,2,0,1.5,0,1)
-  #'
-  #'
-  #'names(prior.model.params)<-c(
-  #'
-  #'"alpha.y.min","alpha.y.max","alpha.x.min","alpha.x.max",
-  #'
-  #'"theta.x.min","theta.x.max","sigmasq.x.min","sigmasq.x.max",
-  #'
-  #'"alpha.tau.min","alpha.tau.max","theta.tau.min","theta.tau.max",
-  #'
-  #'"sigmasq.tau.min","sigmasq.tau.max")
-  #'prior.reg.params<-c(-3, 3, -3, 3, -3, 3)
-  #'names(prior.reg.params)<-c("b0.min", "b0.max", "b1.min", "b1.max", "b2.min", "b2.max")
-  #'ououcirprior(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params)
-  #'
-  #'
-  ououcirprior <- function(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params){
-    alpha.y.min <-prior.model.params["alpha.y.min"]
-    alpha.y.max <-prior.model.params["alpha.y.max"]
-    alpha.x.min <-prior.model.params["alpha.x.min"]
-    alpha.x.max <-prior.model.params["alpha.x.max"]
-    theta.x.min <-prior.model.params["theta.x.min"]
-    theta.x.max <- prior.model.params["theta.x.max"]
-    sigmasq.x.min <-prior.model.params["sigmasq.x.min"]
-    sigmasq.x.max <- prior.model.params["sigmasq.x.max"]
-    alpha.tau.min <- prior.model.params["alpha.tau.min"]
-    alpha.tau.max <- prior.model.params["alpha.tau.max"]
-    theta.tau.min <- prior.model.params["theta.tau.min"]
-    theta.tau.max <- prior.model.params["theta.tau.max"]
-    sigmasq.tau.min <- prior.model.params["sigmasq.tau.min"]
-    sigmasq.tau.max <- prior.model.params["sigmasq.tau.max"]
+#' Draw prior samples for OUOUCIR model
+#'
+#' Simulate sample for parameters in OUOUCIR model given a set of hyper parameters
+#'
+#' The function requires user to input hyper parameters for \eqn{\alpha_y,\alpha_x,\theta_x, \sigma^2_x,\alpha_\tau, \theta_\tau,\sigma^2_\tau} and hyper parameters for regression parameters \eqn{b_0,b_1,b_2} from uniform distribution with its minimum and maximum values.
+#'
+#' @param prior.model.params  A vectors of hyper parameters for model parameter containing (alpha.y.min, alpha.y.max) for alpha.y, (alpha.x.min, alpha.x.max) for alpha.x, (theta.x.min, theta.x.max) for theta.x, (sigmasq.x.min, sigmasq.x.max) for sigmasq.x, (alpha.tau.min, alpha.tau.max) for alpha.tau, (theta.tau.min, theta.tau.max) for theta_tau, (sigmasq.tau.min, sigmasq.tau.max) for rate parameter of tau
+#' @param prior.reg.params A vector of hyper paramter for regression parameters. (b0.min,b0.max) for b0, (b1.min,b1.max) for b1,  (b2.min,b2.max) for b2
+#'
+#' @return Returns the  samples of model parameters and regression parameter
+#'
+#' @export
+#'
+#' @examples
+#'
+#'prior.model.params<-c(0,3,0,3,-2,2,0,1,0,3,0,2,0,1.5,0,1)
+#'
+#'
+#'names(prior.model.params)<-c(
+#'
+#'"alpha.y.min","alpha.y.max","alpha.x.min","alpha.x.max",
+#'
+#'"theta.x.min","theta.x.max","sigmasq.x.min","sigmasq.x.max",
+#'
+#'"alpha.tau.min","alpha.tau.max","theta.tau.min","theta.tau.max",
+#'
+#'"sigmasq.tau.min","sigmasq.tau.max")
+#'prior.reg.params<-c(-3, 3, -3, 3, -3, 3)
+#'names(prior.reg.params)<-c("b0.min", "b0.max", "b1.min", "b1.max", "b2.min", "b2.max")
+#'ououcirprior(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params)
+#'
+#'
+ououcirprior <- function(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params){
+  alpha.y.min <-prior.model.params["alpha.y.min"]
+  alpha.y.max <-prior.model.params["alpha.y.max"]
+  alpha.x.min <-prior.model.params["alpha.x.min"]
+  alpha.x.max <-prior.model.params["alpha.x.max"]
+  theta.x.min <-prior.model.params["theta.x.min"]
+  theta.x.max <- prior.model.params["theta.x.max"]
+  sigmasq.x.min <-prior.model.params["sigmasq.x.min"]
+  sigmasq.x.max <- prior.model.params["sigmasq.x.max"]
+  alpha.tau.min <- prior.model.params["alpha.tau.min"]
+  alpha.tau.max <- prior.model.params["alpha.tau.max"]
+  theta.tau.min <- prior.model.params["theta.tau.min"]
+  theta.tau.max <- prior.model.params["theta.tau.max"]
+  sigmasq.tau.min <- prior.model.params["sigmasq.tau.min"]
+  sigmasq.tau.max <- prior.model.params["sigmasq.tau.max"]
 
-    alpha.y<-runif(n=1,min=alpha.y.min,max=alpha.y.max)
-    alpha.x<-runif(n=1,min=alpha.x.min,max=alpha.x.max)
-    theta.x<-runif(n=1,min=theta.x.min,max=theta.x.max)
-    sigmasq.x<-runif(n=1,min=sigmasq.x.min,max=sigmasq.x.max)
-    alpha.tau <- runif(n=1,min=alpha.tau.min,max=alpha.tau.max)
-    theta.tau <- runif(n=1,min=theta.tau.min,max=theta.tau.max)
-    sigmasq.tau<-runif(n=1,min=sigmasq.tau.min,max=sigmasq.tau.max)
+  alpha.y<-runif(n=1,min=alpha.y.min,max=alpha.y.max)
+  alpha.x<-runif(n=1,min=alpha.x.min,max=alpha.x.max)
+  theta.x<-runif(n=1,min=theta.x.min,max=theta.x.max)
+  sigmasq.x<-runif(n=1,min=sigmasq.x.min,max=sigmasq.x.max)
+  alpha.tau <- runif(n=1,min=alpha.tau.min,max=alpha.tau.max)
+  theta.tau <- runif(n=1,min=theta.tau.min,max=theta.tau.max)
+  sigmasq.tau<-runif(n=1,min=sigmasq.tau.min,max=sigmasq.tau.max)
 
-    b0.min<-prior.reg.params[1]
-    b0.max<-prior.reg.params[2]
-    b1.min<-prior.reg.params[3]
-    b1.max<-prior.reg.params[4]
-    b2.min<-prior.reg.params[5]
-    b2.max<-prior.reg.params[6]
-    b0<-runif(n=1, min=b0.min, max=b0.max)
-    b1<-runif(n=1, min=b1.min, max=b1.max)
-    b2<-runif(n=1, min=b2.min, max=b2.max)
+  b0.min<-prior.reg.params[1]
+  b0.max<-prior.reg.params[2]
+  b1.min<-prior.reg.params[3]
+  b1.max<-prior.reg.params[4]
+  b2.min<-prior.reg.params[5]
+  b2.max<-prior.reg.params[6]
+  b0<-runif(n=1, min=b0.min, max=b0.max)
+  b1<-runif(n=1, min=b1.min, max=b1.max)
+  b2<-runif(n=1, min=b2.min, max=b2.max)
 
-    model.params<-c(alpha.y, alpha.x, theta.x, sigmasq.x, alpha.tau, theta.tau, sigmasq.tau)
-    reg.params<- c(b0, b1, b2)
+  model.params<-c(alpha.y, alpha.x, theta.x, sigmasq.x, alpha.tau, theta.tau, sigmasq.tau)
+  reg.params<- c(b0, b1, b2)
 
-    return(list(model.params=model.params, reg.params=reg.params))
+  return(list(model.params=model.params, reg.params=reg.params))
 
-  }
+}
 
 
 ######
@@ -760,48 +759,48 @@ OUprior<-function(tree=tree,trait=trait,model=model){
   ou.result<-geiger::fitContinuous(tree,trait,model=model)
   alpha <- ou.result$opt$alpha#rexp(n=1, rate=1/alpha.prior.mean)
   if(model=="OU"){
-      if(alpha < 1e-5){alpha <-0.001}
-    }
+    if(alpha < 1e-5){alpha <-0.001}
+  }
   theta <- ou.result$opt$z0#rnorm(n=1, mean=theta.prior.mean, sd=theta.prior.sd)
   sigmasq<-ou.result$opt$sigsq#rexp(n=1, rate=1/sigmasq.prior.mean)
   return(list(alpha=alpha,theta=theta,sigmasq=sigmasq,root=theta))
 }
 
-  #' Summary statistics
-  #'
-  #' Calculate summary statistics given trait and tree
-  #'
-  #'  This function computes the 12 summary statistics using the trait and tree. \code{\link[ape:pic]{ape}} is used for computing the contrast trait from the difference between the species and its closet neighbor.
-  #'  For Bloomberg K and Pagel Lambda, statsitics are computed using \code{\link[phytools:phylosig]{phytools}}.
-  #'
-  #' @param tree  An ape: tree object stored in phylo format
-  #' @param trait A vector of numerical trait value
-  #' @param ... relevent argument
-  #'
-  #' @return Twelve summary statistcs:  mean, sd, median, skewness, kurtosis from the raw data as well as from data with the difference between two closet neighbors, Bloomberg K and Pagel's lambda.
-  #'
-  #' @name sumstat
-  #' @aliases sumstat
-  #' @export
-  #'
-  #' @references
-  #'  \enumerate{
-  #'   \item Paradis E. & Schliep K. 2018. ape 5.0: an environment for modern phylogenetics and evolutionary analyses in R. Bioinformatics 35: 526-528.
-  #'   \item Blomberg, Simon P., Theodore Garland Jr, and Anthony R. Ives. "Testing for phylogenetic signal in comparative data: behavioral traits are more labile." Evolution 57.4 (2003): 717-745.
-  #'   \item Pagel, Mark. "Inferring the historical patterns of biological evolution." Nature 401.6756 (1999): 877.
-  #'   \item Revell, Liam J. "phytools: an R package for phylogenetic comparative biology (and other things)." Methods in Ecology and Evolution 3.2 (2012): 217-223.
-  #' }
-  #'
-  #' @examples
-  #' library(ape)
-  #' tree<-rcoal(5)
-  #' trait <- rnorm(5)
-  #' names(trait)<-tree$tip.label
-  #' sumstat(trait=trait,tree=tree)
-  #'
-  #'
-  #'
- sumstat<-function(trait=trait,tree=tree, ...){
+#' Summary statistics
+#'
+#' Calculate summary statistics given trait and tree
+#'
+#'  This function computes the 12 summary statistics using the trait and tree. \code{\link[ape:pic]{ape}} is used for computing the contrast trait from the difference between the species and its closet neighbor.
+#'  For Bloomberg K and Pagel Lambda, statsitics are computed using \code{\link[phytools:phylosig]{phytools}}.
+#'
+#' @param tree  An ape: tree object stored in phylo format
+#' @param trait A vector of numerical trait value
+#' @param ... relevent argument
+#'
+#' @return Twelve summary statistcs:  mean, sd, median, skewness, kurtosis from the raw data as well as from data with the difference between two closet neighbors, Bloomberg K and Pagel's lambda.
+#'
+#' @name sumstat
+#' @aliases sumstat
+#' @export
+#'
+#' @references
+#'  \enumerate{
+#'   \item Paradis E. & Schliep K. 2018. ape 5.0: an environment for modern phylogenetics and evolutionary analyses in R. Bioinformatics 35: 526-528.
+#'   \item Blomberg, Simon P., Theodore Garland Jr, and Anthony R. Ives. "Testing for phylogenetic signal in comparative data: behavioral traits are more labile." Evolution 57.4 (2003): 717-745.
+#'   \item Pagel, Mark. "Inferring the historical patterns of biological evolution." Nature 401.6756 (1999): 877.
+#'   \item Revell, Liam J. "phytools: an R package for phylogenetic comparative biology (and other things)." Methods in Ecology and Evolution 3.2 (2012): 217-223.
+#' }
+#'
+#' @examples
+#' library(ape)
+#' tree<-rcoal(5)
+#' trait <- rnorm(5)
+#' names(trait)<-tree$tip.label
+#' sumstat(trait=trait,tree=tree)
+#'
+#'
+#'
+sumstat<-function(trait=trait,tree=tree, ...){
   names(trait)<-tree$tip.label
   pic.trait<-pic(x=trait,phy=tree)
   sumstatvalue<-c(mean(trait),sd(trait),median(trait),skewness(trait),kurtosis(trait),mean(pic.trait),sd(pic.trait),median(pic.trait),skewness(pic.trait),kurtosis(pic.trait),phylosig(tree,x=trait,method = "K",test=T)$K,phylosig(tree,x=trait,method = "lambda",test=T)$lambda)
@@ -1201,6 +1200,12 @@ ououcirTrait<-function(tree=tree,traitset=traitset,sims=sims){
   return(list(sumstat.ououcir=sumstat.ououcir,ououcir.par.sim=ououcir.par.sim))
 }
 
+
+
+
+
+
+
 ###############
 ### Analysis ##
 ###############
@@ -1368,4 +1373,1413 @@ ouxy<-function(tree=tree,traitset=traitset,tol=0.1,sims= 100){
   table.output<-rbind(cbind(table.params,table.b),GLS)
   rownames(table.output) <- c("OUBMBM","OUOUBM","OUBMCIR","OUOUCIR","GLS")
   return(list(s.mnlog=s.mnlog,table.out=table.output))
+}
+
+
+### OUBM
+
+#' Simulate traits under OUBM model given a set of parameters
+#'
+#' Simulate traits under OUBM model given a set of model parameters, regression parameters, tree and ancestral values.
+#'
+#' The model requires user to input  model parameters \eqn{\alpha_y, \sigma^2_x,\tau} and regression parameters \eqn{b_0,b_1,b_2}, a tree object, trait dataset (one response, two covariate), ancestral values(root) which is estimated by BM or OU model from \code{\link[geiger:fitContinuous]{geiger}}. Then the algorithm starts from the root and apply the tree traversal algorithm to simulate trait on each node according the OUBM dynamics.
+#'
+#' @param model.params  A vector of model parameters including alpha.y: force parameter of response trait, sigmasq.x: rate parameter of covariate and tau: rate parameter of response trait
+#' @param reg.params A vector of regression paramters including  b0: intercept parameter of regression, b1: slope parameter of first covariate,  b2: slope paramter of the second covariate
+#' @param root A vector of numerical values for root of species estimated from \code{OUprior} estimated from \code{OUprior}
+#' @param tree  An ape: tree object stored in phylo format
+#'
+#' @return Returns the trait vectors \eqn{Y=(y_1,y_2,\cdots,y_n)', X_1=(x_{1,1},x_{1.2},\cdots,x_{1,n})',X_2=(x_{2,1},x_{2,2},\cdots,x_{2,n})'} simulated from the model.
+#'
+#'
+#'
+#' @references
+#'  \enumerate{
+#'   \item Jhwueng, D. C. (2020). Modeling rate of adaptive trait evolution using Cox–Ingersoll–Ross process: An Approximate Bayesian Computation approach. Computational Statistics & Data Analysis, 145, 106924.
+#'   \item Jhwueng, D-C., and Vasileios Maroulas. "Adaptive trait evolution in random environment." Journal of Applied Statistics 43.12 (2016): 2310-2324.
+#'   \item Hansen, Thomas F., Jason Pienaar, and Steven Hecht Orzack. "A comparative method for studying adaptation to a randomly evolving environment." Evolution: International Journal of Organic Evolution 62.8 (2008): 1965-1977.
+#' }
+#'
+#'
+#' @examples
+#' library(ape)
+#' tree<-rcoal(5)
+#' tree<-reorder(tree,"postorder")
+#' root<-list(y.ou.sigmsq=1 ,y.ou.root=0, x1.ou.root=0, x2.ou.root=0,x1.bm.root=0, x2.bm.root=0)
+#' model.params<-c(0.5,1,0.2)
+#' names(model.params)<-c("alpha.y","sigmasq.x","tau")
+#' reg.params<-c(0,1,1)
+#' names(reg.params)<-c("b0","b1","b2")
+#' oubmmodel(model.params,reg.params,root=root,tree=tree)
+#'
+#' @import stats ape coda Sim.DiffProc MCMCpack abc phytools nlme TreeSim adephylo maps geiger EasyABC
+#'
+#' @import utils
+#'
+#' @export
+oubmmodel<-function(model.params,reg.params,root=root,tree=tree){
+  alpha.y<-model.params[1]
+  pos <- 1
+  envir = as.environment(pos)
+  assign("alpha.y", alpha.y, envir = envir)
+  sigmasq.x<-model.params[2]
+  tau<-model.params[3]
+  b0<-reg.params[1]
+  b1<-reg.params[2]
+  b2<-reg.params[3]
+
+  n<-Ntip(tree)
+  x1nodestates<-array(NA,c(2*n-1))
+  x1nodestates[n+1]<- root$x1.bm.root
+  x2nodestates<-array(NA,c(2*n-1))
+  x2nodestates[n+1]<- root$x2.bm.root
+  optimnodestates<-array(NA,c(2*n-1))
+  optimnodestates[n+1]<-  b0 + b1*root$x1.bm.root + b2*root$x2.bm.root
+  ynodestates<-array(NA,c(2*n-1))
+  ynodestates[n+1]<-root$y.ou.root
+
+  N<-dim(tree$edge)[1]
+  anc<-tree$edge[,1]
+  des<-tree$edge[,2]
+  treelength<-tree$edge.length
+  for(index in N:1){
+    t<-treelength[index]
+    x1nodestates[des[index]]<-rnorm(n=1,mean=x1nodestates[anc[index]],sd= sqrt(sigmasq.x*treelength[index]))
+    x2nodestates[des[index]]<-rnorm(n=1,mean=x2nodestates[anc[index]],sd= sqrt(sigmasq.x*treelength[index]))
+    optimnodestates[des[index]]<- b0 + b1*x1nodestates[des[index]] + b2*x2nodestates[des[index]]
+
+    IntPart1<- b0*(1-exp(-alpha.y*t)) + b1*sigmasq.x*rnorm(1,0,sqrt(t + (1-exp(-2*alpha.y*t))/2/alpha.y)) + b2*sigmasq.x*rnorm(1,0,sqrt(t + (1-exp(-2*alpha.y*t))/2/alpha.y))
+    IntPart2 <- tau*rnorm(1,mean=0,sd= sqrt((1-exp(-2*alpha.y*t))/2/alpha.y))
+    ynodestates[des[index]]<- exp(-alpha.y*t)*ynodestates[anc[index]] +  IntPart1 + IntPart2
+  }
+  simtrait<-ynodestates[1:n]
+  return(list(y=simtrait,x1=x1nodestates[1:n],x2=x2nodestates[1:n]))
+}
+
+#' Draw prior samples for OUBM model
+#'
+#' Simulate sample for parameters in OUBM model given a set of hyper parameters
+#'
+#' The function requires user to input hyper parameters for \eqn{\alpha_y, \sigma^2_x,\tau} and hyper parameters for regression parameters \eqn{b_0,b_1,b_2} from uniform distribution with its minimum and maximum values.
+#'
+#' @param prior.model.params  A vectors of hyper parameters for model parameter containing (alpha.y.min, alpha.y.max) for alpha.y, (sigmasq.x.min, sigmasq.x.max) for sigmasq.x, (tau.y.min, tau.max) for rate parameter of tau
+#' @param prior.reg.params A vector of hyper paramter for regression parameters. (b0.min,b0.max) for b0, (b1.min,b1.max) for b1,  (b2.min,b2.max) for b2
+#'
+#' @return Returns the  samples of model parameters and regression parameter
+#'
+#' @export
+#'
+#' @examples
+#'
+#' prior.model.params<-c(0,3,0,3,0,1)
+#'
+#' names(prior.model.params)<-c("alpha.y.min","alpha.y.max",
+#'
+#' "tau.min","tau.max","sigmasq.x.min","sigmasq.x.max")
+#'
+#' prior.reg.params<-c(-3, 3, -3, 3, -3, 3)
+#' names(prior.reg.params)<-c("b0.min", "b0.max", "b1.min", "b1.max", "b2.min", "b2.max")
+#' oubmprior(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params)
+#'
+#'
+oubmprior<-function(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params){
+  alpha.y.min <-prior.model.params["alpha.y.min"]
+  alpha.y.max <-prior.model.params["alpha.y.max"]
+  sigmasq.x.min <-prior.model.params["sigmasq.x.min"]
+  sigmasq.x.max <-prior.model.params["sigmasq.x.max"]
+  tau.min <- prior.model.params["tau.min"]
+  tau.max <- prior.model.params["tau.max"]
+
+  alpha.y<-runif(n=1,min=alpha.y.min,max=alpha.y.max)
+  sigmasq.x<-runif(n=1,min=sigmasq.x.min,max=sigmasq.x.max)
+  tau<-runif(n=1,min=tau.min,max=tau.max)
+
+  b0.min<-prior.reg.params[1]
+  b0.max<-prior.reg.params[2]
+  b1.min<-prior.reg.params[3]
+  b1.max<-prior.reg.params[4]
+  b2.min<-prior.reg.params[5]
+  b2.max<-prior.reg.params[6]
+  b0<-runif(n=1, min=b0.min, max=b0.max)
+  b1<-runif(n=1, min=b1.min, max=b1.max)
+  b2<-runif(n=1, min=b2.min, max=b2.max)
+
+  model.params<-c(alpha.y, sigmasq.x, tau)
+  reg.params<- c(b0, b1, b2)
+
+  return(list(model.params=model.params, reg.params=reg.params))
+}
+
+
+###############
+### oubmTrait ###
+##############
+#' Parameter samples and summary statistics
+#'
+#' Draw sample for parameters, simulate trait and compute the summary statistics for OUBM model
+#'
+#' Given tree, trait sets, function \code{\link{HyperParam}} is called to yield the range of parameters, then function \code{\link{oubmprior}} is called to draw sample for parameter, then the function \code{\link{oubmmodel}} is applied to simulate traits through post order tree traversal algorithm, finally the summary statistics is computed by function \code{\link{sumstat}}.
+#'
+#' @param tree   An ape: tree object stored in phylo format
+#' @param traitset a dataframe that contains 3 traits
+#' @param sims number of trait replicate
+#'
+#' @return A list of vectors containing a dataframe of summary statistics, and a dataframe of parameter samples
+#'
+#' @export
+#'
+#'
+#' @examples
+#'
+#' ## using bat dataset (running time more > 5 sec)
+#' \donttest{
+#' data(bat)
+#' tree<-bat$tree
+#' traitset<-bat$traitset
+#' sims<-10
+#' oubmTrait(tree=tree,traitset=traitset,sims=sims)
+#'}
+oubmTrait<-function(tree=tree,traitset=traitset,sims=sims){
+  prior.params<-HyperParam(tree=tree,traitset=traitset)
+  prior.model.params<-prior.params$prior.model.params
+  prior.reg.params<-prior.params$prior.reg.params
+  prior.params.oubm <- oubmprior(prior.model.params = prior.model.params, prior.reg.params = prior.reg.params)
+  root<-prior.params$root
+  sim.oubm.trait<-array(NA,c(dim(traitset)[1],3,sims))
+  model.params.oubm<-array(NA,c(3,sims))
+  rownames(model.params.oubm)<-c("alpha.y","sigmasq.x","tau")
+  reg.params.oubm<-array(NA,c(3,sims))
+  row.names(reg.params.oubm)<-c("b0", "b1", "b2")
+  y.sumstat.oubm<-array(NA,c(12,sims))
+  rownames(y.sumstat.oubm)<-c("y.trait.mean","y.trait.sd","y.trait.median","y.trait.skewness","y.trait.kurtosis","y.pic.trait.mean","y.pic.trait.sd","y.pic.trait.mediam","y.pic.trait.skewness","y.pic.trait.kurtosis","y.pic.trait.K","y.pic.trait.lambda")
+  x1.sumstat.oubm<-array(NA,c(12,sims))
+  rownames(x1.sumstat.oubm)<-c("x1.trait.mean","x1.trait.sd","x1.trait.median","x1.trait.skewness","x1.trait.kurtosis","x1.pic.trait.mean","x1.pic.trait.sd","x1.pic.trait.mediam","x1.pic.trait.skewness","x1.pic.trait.kurtosis","x1.pic.trait.K","x1.pic.trait.lambda")
+  x2.sumstat.oubm<-array(NA,c(12,sims))
+  rownames(x2.sumstat.oubm)<-c("x2.trait.mean","x2.trait.sd","x2.trait.median","x2.trait.skewness","x2.trait.kurtosis","x2.pic.trait.mean","x2.pic.trait.sd","x2.pic.trait.mediam","x2.pic.trait.skewness","x2.pic.trait.kurtosis","x2.pic.trait.K","x2.pic.trait.lambda")
+
+  for(simIndex in 1:sims){
+    if(simIndex %%100==0){print(paste("oubm",simIndex,sep=""))}
+    #print(paste("oubm simIndex= ",simIndex,sep=""))
+    prior.params<-oubmprior(prior.model.params = prior.model.params, prior.reg.params = prior.reg.params)
+    model.params.oubm[,simIndex]<-prior.params$model.params#for record only
+    reg.params.oubm[,simIndex]<-prior.params$reg.params#for record only
+
+    sim.trait <-oubmmodel(model.params=prior.params$model.params,reg.params=prior.params$reg.params,root=root,tree=tree)
+    sim.oubm.trait[,1,simIndex]<-sim.trait$y
+    sim.oubm.trait[,2,simIndex]<-sim.trait$x1
+    sim.oubm.trait[,3,simIndex]<-sim.trait$x2
+    y.sumstat.oubm[,simIndex]<- sumstat(trait=sim.trait$y,tree=tree)
+    x1.sumstat.oubm[,simIndex]<- sumstat(trait=sim.trait$x1,tree=tree)
+    x2.sumstat.oubm[,simIndex]<- sumstat(trait=sim.trait$x2,tree=tree)
+  }# end of loop
+
+  sumstat.oubm <- cbind(t(y.sumstat.oubm),t(x1.sumstat.oubm),t(x2.sumstat.oubm))
+  oubm.par.sim <- cbind(t(model.params.oubm),t(reg.params.oubm))
+
+  return(list(sumstat.oubm=sumstat.oubm,oubm.par.sim=oubm.par.sim))
+}
+
+
+
+### OUOU
+#' Simulate traits under OUOU model given a set of parameters
+#'
+#' Simulate traits under OUOU model given a set of model parameters, regression parameters, tree and ancestral values.
+#'
+#' The model requires user to input  model parameters \eqn{\alpha_y,\alpha_x,\theta_x, \sigma^2_x,\tau} and regression parameters \eqn{b_0,b_1,b_2}, a tree object, trait dataset (one response, two covariate), ancestral values(root) which is estimated by BM or OU model from \code{\link[geiger:fitContinuous]{geiger}}. Then the algorithm starts from the root and apply the tree traversal algorithm to simulate trait on each node according the OUOU dynamics.
+#'
+#'
+#'
+#'
+#' @param model.params  A vector of model parameters including alpha.y: force parameter of response trait, alpha.x: force parameter of covariate, theta.x: optimum parameter of covariate, sigmasq.x: rate parameter of covariate and tau rate parameter of response trait
+#'
+#' @param reg.params A vector of regression paramters including  b0: intercept parameter of regression, b1: slope parameter of first covariate,  b2: slope paramter of the second covariate
+#' @param root A vector of numerical values for root of species estimated from \code{OUprior}
+#' @param tree  An ape: tree object stored in phylo format
+#'
+#' @return Returns the trait vectors \eqn{Y=(y_1,y_2,\cdots,y_n)', X_1=(x_{1,1},x_{1.2},\cdots,x_{1,n})',X_2=(x_{2,1},x_{2,2},\cdots,x_{2,n})'} simulated from the model.
+#'
+#' @export
+#'
+#' @references
+#'  \enumerate{
+#'   \item Jhwueng, D-C. (2019) Statistical modeling for adaptive trait evolution. Under review.
+#'   \item Jhwueng, D-C., and Vasileios Maroulas. "Adaptive trait evolution in random environment." Journal of Applied Statistics 43.12 (2016): 2310-2324.
+#'   \item Hansen, Thomas F., Jason Pienaar, and Steven Hecht Orzack. "A comparative method for studying adaptation to a randomly evolving environment." Evolution: International Journal of Organic Evolution 62.8 (2008): 1965-1977.
+#' }
+#'
+#'
+#' @examples
+#'library(ape)
+#'tree<-rcoal(5)
+#'tree<-reorder(tree,"postorder")
+#'root<-list(y.ou.sigmsq=1 ,y.ou.root=0, x1.ou.root=0, x2.ou.root=0,x1.bm.root=0, x2.bm.root=0)
+#'model.params<-c(0.5,0.25,0,1,0.2)
+#'names(model.params)<-c("alpha.y","alpha.x","theta.x","sigmasq.x","tau")
+#'reg.params<-c(0,1,1)
+#'names(reg.params)<-c("b0","b1","b2")
+#'ououmodel(model.params,reg.params,root=root,tree=tree)
+#'
+#'
+ououmodel<-function(model.params,reg.params,root=root,tree=tree){
+  alpha.y<-model.params[1]
+
+  pos <- 1
+  envir = as.environment(pos)
+  assign("alpha.y", alpha.y, envir = envir)
+
+  alpha.x<-model.params[2]
+  theta.x<-model.params[3]
+  sigmasq.x<-model.params[4]
+  tau<-model.params[5]
+
+  b0<-reg.params[1]
+  b1<-reg.params[2]
+  b2<-reg.params[3]
+
+  n<-Ntip(tree)
+  x1nodestates<-array(NA,c(2*n-1))
+  x1nodestates[n+1]<- root$x1.ou.root
+  x2nodestates<-array(NA,c(2*n-1))
+  x2nodestates[n+1]<- root$x2.ou.root
+  optimnodestates<-array(NA,c(2*n-1))
+  optimnodestates[n+1]<- b0 + b1*root$x1.ou.root + b2*root$x2.ou.root
+  ynodestates<-array(NA,c(2*n-1))
+  ynodestates[n+1]<-root$y.ou.root
+
+  N<-dim(tree$edge)[1]
+  anc<-tree$edge[,1]
+  des<-tree$edge[,2]
+  treelength<-tree$edge.length
+
+  for(index in N:1){
+    t<-treelength[index]
+    x1ou.mean<-x1nodestates[anc[index]]*exp(-alpha.x*treelength[index]) + theta.x*(1-exp(-alpha.x*treelength[index]))
+    x1ou.sd<-sqrt((sigmasq.x/(2*alpha.x))*(1-exp(-2*alpha.x*treelength[index])))
+    if(x1ou.sd<1e-10){x1ou.sd<-sigmasq.x*treelength[index]}
+    x1nodestates[des[index]]<-rnorm(n=1,mean=x1ou.mean,sd=x1ou.sd)
+
+    x2ou.mean<-x2nodestates[anc[index]]*exp(-alpha.x*treelength[index]) + theta.x*(1-exp(-alpha.x*treelength[index]))
+    x2ou.sd<-sqrt((sigmasq.x/(2*alpha.x))*(1-exp(-2*alpha.x*treelength[index])))
+    if(x2ou.sd<1e-10){x2ou.sd<-sigmasq.x*treelength[index]}
+    x2nodestates[des[index]]<-rnorm(n=1,mean=x2ou.mean,sd=x2ou.sd)
+
+    optimnodestates[des[index]]<- b0 + b1*x1nodestates[des[index]] + b2*x2nodestates[des[index]]
+    sigmasq.theta<- b1^2*sigmasq.x + b2^2*sigmasq.x
+
+    IntPart1 <- (b0+(b1+b2)*theta.x)*(1-exp(-alpha.y*t)) + alpha.y/(alpha.y-alpha.x)*(b1*(x1nodestates[anc[index]]-theta.x+sigmasq.x)*rnorm(1,0,sqrt( (1-exp(-2*alpha.x*t))/2/alpha.x + (1-exp(-2*alpha.y*t))/2/alpha.y))
++b2*(x2nodestates[anc[index]]-theta.x+sigmasq.x)*rnorm(1,0,sqrt( (1-exp(-2*alpha.x*t))/2/alpha.x + (1-exp(-2*alpha.y*t))/2/alpha.y)))
+    IntPart2 <- tau*rnorm(1,mean=0,sd= sqrt((1-exp(-2*alpha.y*t))/2/alpha.y))
+
+    ynodestates[des[index]]<- exp(-alpha.y*t)*ynodestates[anc[index]] +  IntPart1 + IntPart2
+
+  }
+
+  simtrait<-ynodestates[1:n]
+  return(list(y=simtrait,x1=x1nodestates[1:n],x2=x2nodestates[1:n]))
+}
+
+
+#' Draw prior samples for OUOU model
+#'
+#' Simulate sample for parameters in ouou model given a set of hyper parameters
+#'
+#' The function requires user to input hyper parameters for \eqn{\alpha_y,\alpha_x,\theta_x, \sigma^2_x,\tau} and hyper parameters for regression parameters \eqn{b_0,b_1,b_2} from uniform distribution with its minimum and maximum values.
+#'
+#' @param prior.model.params  A vectors of hyper parameters for model parameter containing (alpha.y.min, alpha.y.max) for alpha.y, (alpha.x.min, alpha.x.max) for alpha.x,(theta.y.min, theta.y.max) for theta.y, (sigmasq.x.min, sigmasq.x.max) for sigmasq.x, (tau.y.min, tau.max) for rate parameter of tau
+#' @param prior.reg.params A vector of hyper paramter for regression parameters. (b0.min,b0.max) for b0, (b1.min,b1.max) for b1,  (b2.min,b2.max) for b2
+#'
+#' @return Returns the  samples of model parameters and regression parameter
+#'
+#' @export
+#'
+#' @examples
+#'
+#'prior.model.params<-c(0,3,0,3,-5,5,0,1,0,2)
+#'names(prior.model.params)<-c(
+#'
+#'"alpha.y.min","alpha.y.max","alpha.x.min","alpha.x.max",
+#'
+#'"theta.x.min","theta.x.max","sigmasq.x.min","sigmasq.x.max",
+#'
+#'"tau.min","tau.max")
+#'prior.reg.params<-c(-3, 3, -3, 3, -3, 3)
+#'names(prior.reg.params)<-c("b0.min", "b0.max", "b1.min", "b1.max", "b2.min", "b2.max")
+#'ououprior(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params)
+#'
+#'
+ououprior<-function(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params){
+  alpha.y.min <-prior.model.params["alpha.y.min"]
+  alpha.y.max <-prior.model.params["alpha.y.max"]
+  alpha.x.min <- prior.model.params["alpha.x.min"]
+  alpha.x.max <- prior.model.params["alpha.x.max"]
+  theta.x.min <-prior.model.params["theta.x.min"]
+  theta.x.max <- prior.model.params["theta.x.max"]
+  sigmasq.x.min <-prior.model.params["sigmasq.x.min"]
+  sigmasq.x.max <- prior.model.params["sigmasq.x.max"]
+  tau.min <- prior.model.params["tau.min"]
+  tau.max <- prior.model.params["tau.max"]
+
+  alpha.y<-runif(n=1,min=alpha.y.min,max=alpha.y.max)
+  alpha.x<-runif(n=1,min=alpha.x.min,max=alpha.x.max)
+  theta.x<-runif(n=1,min=theta.x.min,max=theta.x.max)
+  sigmasq.x<-runif(n=1,min=sigmasq.x.min,max=sigmasq.x.max)
+  tau<-runif(n=1,min=tau.min,max=tau.max)
+
+  b0.min<-prior.reg.params[1]
+  b0.max<-prior.reg.params[2]
+  b1.min<-prior.reg.params[3]
+  b1.max<-prior.reg.params[4]
+  b2.min<-prior.reg.params[5]
+  b2.max<-prior.reg.params[6]
+  b0<-runif(n=1, min=b0.min, max=b0.max)
+  b1<-runif(n=1, min=b1.min, max=b1.max)
+  b2<-runif(n=1, min=b2.min, max=b2.max)
+
+  model.params<-c(alpha.y, alpha.x, theta.x, sigmasq.x, tau)
+  reg.params<- c(b0, b1, b2)
+
+  return(list(model.params=model.params, reg.params=reg.params))
+}
+
+
+###############
+### ouou ###
+##############
+#' Parameter samples and summary statistics
+#'
+#' Draw sample for parameters, simulate trait and compute the summary statistics for OUOU model
+#'
+#' Given tree, trait sets, function \code{\link{HyperParam}} is called to yield the range of parameters, then function \code{\link{oubmbmprior}} is called to draw sample for parameter, then the function \code{\link{oubmbmmodel}} is applied to simulate traits through post order tree traversal algorithm, finally the summary statistics is computed by function \code{\link{sumstat}}.
+#'
+#' @param tree   An ape: tree object stored in phylo format
+#' @param traitset a dataframe that contains 3 traits
+#' @param sims number of trait replicate
+#'
+#' @return A list of vectors containing a dataframe of summary statistics, and a dataframe of parameter samples
+#'
+#' @export
+#'
+#'
+#' @examples
+#'
+#' ## using lizard dataset (running time more > 5 sec)
+#' \donttest{
+#' data(lizard)
+#' tree<-lizard$tree
+#' traitset<-lizard$traitset
+#' sims<-10
+#' ououTrait(tree=tree,traitset=traitset,sims=sims)
+#'}
+
+ououTrait<-function(tree=tree,traitset=traitset,sims=sims){
+  prior.params<-HyperParam(tree=tree,traitset=traitset)
+  prior.model.params<-prior.params$prior.model.params
+  prior.reg.params<-prior.params$prior.reg.params
+  prior.params.ouou <- ououprior(prior.model.params = prior.model.params, prior.reg.params = prior.reg.params)
+  sim.ouou.trait<-array(NA,c(dim(traitset)[1],5,sims))
+  root<-prior.params$root
+  model.params.ouou<-array(NA,c(5,sims))
+  rownames(model.params.ouou)<-c("alpha.y","alpha.x","theta.x","sigmasq.x","tau")
+  reg.params.ouou<-array(NA,c(3,sims))
+  row.names(reg.params.ouou)<-c("b0", "b1", "b2")
+  y.sumstat.ouou<-array(NA,c(12,sims))
+  rownames(y.sumstat.ouou)<-c("y.trait.mean","y.trait.sd","y.trait.median","y.trait.skewness","y.trait.kurtosis","y.pic.trait.mean","y.pic.trait.sd","y.pic.trait.mediam","y.pic.trait.skewness","y.pic.trait.kurtosis","y.pic.trait.K","y.pic.trait.lambda")
+  x1.sumstat.ouou<-array(NA,c(12,sims))
+  rownames(x1.sumstat.ouou)<-c("x1.trait.mean","x1.trait.sd","x1.trait.median","x1.trait.skewness","x1.trait.kurtosis","x1.pic.trait.mean","x1.pic.trait.sd","x1.pic.trait.mediam","x1.pic.trait.skewness","x1.pic.trait.kurtosis","x1.pic.trait.K","x1.pic.trait.lambda")
+  x2.sumstat.ouou<-array(NA,c(12,sims))
+  rownames(x2.sumstat.ouou)<-c("x2.trait.mean","x2.trait.sd","x2.trait.median","x2.trait.skewness","x2.trait.kurtosis","x2.pic.trait.mean","x2.pic.trait.sd","x2.pic.trait.mediam","x2.pic.trait.skewness","x2.pic.trait.kurtosis","x2.pic.trait.K","x2.pic.trait.lambda")
+  # rownames(post.model.params.ouou)<-c("alpha.y","alpha.x","theta.x","sigma.x","tau")
+  # row.names(post.reg.params.ouou)<-c("b0", "b1", "b2")
+  for(simIndex in 1:sims){
+    if(simIndex %%100==0){print(paste("ouou",simIndex,sep=""))}
+    #simIndex<-2
+    #print(paste("ouou simIndex= ",simIndex,sep=""))
+    prior.params <- ououprior(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params)
+    model.params.ouou[,simIndex]<-prior.params$model.params#for record only
+    reg.params.ouou[,simIndex]<-prior.params$reg.params#for record only
+
+    sim.trait <-ououmodel(model.params=prior.params$model.params,reg.params=prior.params$reg.params,root=root,tree=tree)
+    sim.ouou.trait[,1,simIndex]<-sim.trait$y
+    sim.ouou.trait[,2,simIndex]<-sim.trait$x1
+    sim.ouou.trait[,3,simIndex]<-sim.trait$x2
+    y.sumstat.ouou[,simIndex]<- sumstat(trait=sim.trait$y,tree=tree)
+    x1.sumstat.ouou[,simIndex]<- sumstat(trait=sim.trait$x1,tree=tree)
+    x2.sumstat.ouou[,simIndex]<- sumstat(trait=sim.trait$x2,tree=tree)
+  }#end of loop
+  sumstat.ouou <- cbind(t(y.sumstat.ouou),t(x1.sumstat.ouou),t(x2.sumstat.ouou))
+  ouou.par.sim <- cbind(t(model.params.ouou),t(reg.params.ouou))
+  return(list(sumstat.ouou=sumstat.ouou,ouou.par.sim=ouou.par.sim))
+}
+
+
+
+
+### ougbm
+
+#' Simulate traits under ougbm model given a set of parameters
+#'
+#' Simulate traits under ougbm model given a set of model parameters, regression parameters, tree and ancestral values.
+#'
+#' The model requires user to input  model parameters \eqn{\alpha_y, \sigma^2_x,\tau} and regression parameters \eqn{b_0,b_1,b_2}, a tree object, trait dataset (one response, two covariate), ancestral values(root) which is estimated by BM or OU model from \code{\link[geiger:fitContinuous]{geiger}}. Then the algorithm starts from the root and apply the tree traversal algorithm to simulate trait on each node according the ougbm dynamics.
+#'
+#' @param model.params  A vector of model parameters including alpha.y: force parameter of response trait, sigmasq.x: rate parameter of covariate and tau: rate parameter of response trait
+#' @param reg.params A vector of regression paramters including  b0: intercept parameter of regression, b1: slope parameter of first covariate,  b2: slope paramter of the second covariate
+#' @param root A vector of numerical values for root of species estimated from \code{OUprior} estimated from \code{OUprior}
+#' @param tree  An ape: tree object stored in phylo format
+#'
+#' @return Returns the trait vectors \eqn{Y=(y_1,y_2,\cdots,y_n)', X_1=(x_{1,1},x_{1.2},\cdots,x_{1,n})',X_2=(x_{2,1},x_{2,2},\cdots,x_{2,n})'} simulated from the model.
+#'
+#'
+#'
+#' @references
+#'  \enumerate{
+#'   \item Jhwueng, D. C. (2020). Modeling rate of adaptive trait evolution using Cox–Ingersoll–Ross process: An Approximate Bayesian Computation approach. Computational Statistics & Data Analysis, 145, 106924.
+#'   \item Jhwueng, D-C., and Vasileios Maroulas. "Adaptive trait evolution in random environment." Journal of Applied Statistics 43.12 (2016): 2310-2324.
+#'   \item Hansen, Thomas F., Jason Pienaar, and Steven Hecht Orzack. "A comparative method for studying adaptation to a randomly evolving environment." Evolution: International Journal of Organic Evolution 62.8 (2008): 1965-1977.
+#' }
+#'
+#'
+#' @examples
+#' library(ape)
+#' tree<-rcoal(5)
+#' tree<-reorder(tree,"postorder")
+#' root<-list(y.ou.sigmsq=1 ,y.ou.root=0, x1.ou.root=0, x2.ou.root=0,x1.bm.root=0, x2.bm.root=0)
+#' model.params<-c(0.5,1,0.2)
+#' names(model.params)<-c("alpha.y","sigmasq.x","tau")
+#' reg.params<-c(0,1,1)
+#' names(reg.params)<-c("b0","b1","b2")
+#' ougbmmodel(model.params,reg.params,root=root,tree=tree)
+#'
+#' @import stats ape coda Sim.DiffProc MCMCpack abc phytools nlme TreeSim adephylo maps geiger EasyABC
+#'
+#' @import utils
+#'
+#' @export
+ougbmmodel<-function(model.params,reg.params,root=root,tree=tree){
+  alpha.y<-model.params[1]
+  pos <- 1
+  envir = as.environment(pos)
+  assign("alpha.y", alpha.y, envir = envir)
+
+  sigmasq.x<-model.params[2]
+  sigma.x<-sqrt(sigmasq.x)
+  pos <- 1
+  envir = as.environment(pos)
+  assign("sigma.x", sigma.x, envir = envir)
+
+  tau<-model.params[3]
+  pos <- 1
+  envir = as.environment(pos)
+  assign("tau", tau, envir = envir)
+
+  b0<-reg.params[1]
+  b1<-reg.params[2]
+  b2<-reg.params[3]
+
+  n<-Ntip(tree)
+  x1nodestates<-array(NA,c(2*n-1))
+  x1nodestates[n+1]<- root$x1.bm.root
+  x2nodestates<-array(NA,c(2*n-1))
+  x2nodestates[n+1]<- root$x2.bm.root
+  optimnodestates<-array(NA,c(2*n-1))
+  optimnodestates[n+1]<-  b0 + b1*exp(b2*root$x1.bm.root)
+  ynodestates<-array(NA,c(2*n-1))
+  ynodestates[n+1]<-root$y.ou.root
+
+  N<-dim(tree$edge)[1]
+  anc<-tree$edge[,1]
+  des<-tree$edge[,2]
+  treelength<-tree$edge.length
+  for(index in N:1){
+    x1nodestates[des[index]]<-rnorm(n=1,mean=x1nodestates[anc[index]],sd= sqrt(sigmasq.x*treelength[index]))
+    x2nodestates[des[index]]<-rnorm(n=1,mean=x2nodestates[anc[index]],sd= sqrt(sigmasq.x*treelength[index]))
+    optimnodestates[des[index]]<- b0 + b1*exp(b2*x1nodestates[des[index]])
+    t<-treelength[index]
+    intgrand<-function(s, alpha.y=alpha.y,sigma.x=sigma.x,b2=b2){
+      return(exp(alpha.y*s+b2*sigma.x*rnorm(1,0,sqrt(s))))
+    }
+
+    simpsongbm<-function(t, alpha.y=alpha.y,sigma.x=sigma.x,b2=b2){
+      a<-0
+      b<-t/2
+      c<-t
+      return(t/6*(intgrand(a, alpha.y=alpha.y,sigma.x=sigma.x,b2=b2)+4*intgrand(b, alpha.y=alpha.y,sigma.x=sigma.x,b2=b2)+intgrand(c, alpha.y=alpha.y,sigma.x=sigma.x,b2=b2)))
+    }
+    Intgeobm<-simpsongbm(t, alpha.y=alpha.y,sigma.x=sigma.x,b2=b2)
+    IntPart1<-b0*(1-exp(-alpha.y*t)) + b1*alpha.y*exp(-alpha.y*t+b2*x1nodestates[anc[index]]*Intgeobm)
+    IntPart2 <- tau*rnorm(1,mean=0,sd= sqrt((1-exp(-2*alpha.y*t))/2/alpha.y))
+    ynodestates[des[index]]<- exp(-alpha.y*t)*ynodestates[anc[index]] +  IntPart1 + IntPart2
+  }
+  simtrait<-ynodestates[1:n]
+  return(list(y=simtrait,x1=x1nodestates[1:n],x2=x2nodestates[1:n]))
+}
+
+#' Draw prior samples for ougbm model
+#'
+#' Simulate sample for parameters in ougbm model given a set of hyper parameters
+#'
+#' The function requires user to input hyper parameters for \eqn{\alpha_y, \sigma^2_x,\tau} and hyper parameters for regression parameters \eqn{b_0,b_1,b_2} from uniform distribution with its minimum and maximum values.
+#'
+#' @param prior.model.params  A vectors of hyper parameters for model parameter containing (alpha.y.min, alpha.y.max) for alpha.y, (sigmasq.x.min, sigmasq.x.max) for sigmasq.x, (tau.y.min, tau.max) for rate parameter of tau
+#' @param prior.reg.params A vector of hyper paramter for regression parameters. (b0.min,b0.max) for b0, (b1.min,b1.max) for b1,  (b2.min,b2.max) for b2
+#'
+#' @return Returns the  samples of model parameters and regression parameter
+#'
+#' @export
+#'
+#' @examples
+#'
+#' prior.model.params<-c(0,3,0,3,0,1)
+#'
+#' names(prior.model.params)<-c("alpha.y.min","alpha.y.max",
+#'
+#' "tau.min","tau.max","sigmasq.x.min","sigmasq.x.max")
+#'
+#' prior.reg.params<-c(-3, 3, -3, 3, -3, 3)
+#' names(prior.reg.params)<-c("b0.min", "b0.max", "b1.min", "b1.max", "b2.min", "b2.max")
+#' ougbmprior(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params)
+#'
+#'
+ougbmprior<-function(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params){
+  alpha.y.min <-prior.model.params["alpha.y.min"]
+  alpha.y.max <-prior.model.params["alpha.y.max"]
+  sigmasq.x.min <-prior.model.params["sigmasq.x.min"]
+  sigmasq.x.max <-prior.model.params["sigmasq.x.max"]
+  tau.min <- prior.model.params["tau.min"]
+  tau.max <- prior.model.params["tau.max"]
+
+  alpha.y<-runif(n=1,min=alpha.y.min,max=alpha.y.max)
+  sigmasq.x<-runif(n=1,min=sigmasq.x.min,max=sigmasq.x.max)
+  tau<-runif(n=1,min=tau.min,max=tau.max)
+
+  b0.min<-prior.reg.params[1]
+  b0.max<-prior.reg.params[2]
+  b1.min<-prior.reg.params[3]
+  b1.max<-prior.reg.params[4]
+  b2.min<-prior.reg.params[5]
+  b2.max<-prior.reg.params[6]
+  b0<-runif(n=1, min=b0.min, max=b0.max)
+  b1<-runif(n=1, min=b1.min, max=b1.max)
+  b2<-runif(n=1, min=b2.min, max=b2.max)
+
+  model.params<-c(alpha.y, sigmasq.x, tau)
+  reg.params<- c(b0, b1, b2)
+
+  return(list(model.params=model.params, reg.params=reg.params))
+}
+
+
+###############
+### ougbmTrait ###
+##############
+#' Parameter samples and summary statistics
+#'
+#' Draw sample for parameters, simulate trait and compute the summary statistics for ougbm model
+#'
+#' Given tree, trait sets, function \code{\link{HyperParam}} is called to yield the range of parameters, then function \code{\link{ougbmprior}} is called to draw sample for parameter, then the function \code{\link{ougbmmodel}} is applied to simulate traits through post order tree traversal algorithm, finally the summary statistics is computed by function \code{\link{sumstat}}.
+#'
+#' @param tree   An ape: tree object stored in phylo format
+#' @param traitset a dataframe that contains 3 traits
+#' @param sims number of trait replicate
+#'
+#' @return A list of vectors containing a dataframe of summary statistics, and a dataframe of parameter samples
+#'
+#' @export
+#'
+#'
+#' @examples
+#'
+#' ## using bat dataset (running time more > 5 sec)
+#' \donttest{
+#' data(bat)
+#' tree<-bat$tree
+#' traitset<-bat$traitset
+#' sims<-10
+#' ougbmTrait(tree=tree,traitset=traitset,sims=sims)
+#'}
+ougbmTrait<-function(tree=tree,traitset=traitset,sims=sims){
+  prior.params<-HyperParam(tree=tree,traitset=traitset)
+  prior.model.params<-prior.params$prior.model.params
+  prior.reg.params<-prior.params$prior.reg.params
+  prior.params.ougbm <- ougbmprior(prior.model.params = prior.model.params, prior.reg.params = prior.reg.params)
+  root<-prior.params$root
+  sim.ougbm.trait<-array(NA,c(dim(traitset)[1],3,sims))
+  model.params.ougbm<-array(NA,c(3,sims))
+  rownames(model.params.ougbm)<-c("alpha.y","sigmasq.x","tau")
+  reg.params.ougbm<-array(NA,c(3,sims))
+  row.names(reg.params.ougbm)<-c("b0", "b1", "b2")
+  y.sumstat.ougbm<-array(NA,c(12,sims))
+  rownames(y.sumstat.ougbm)<-c("y.trait.mean","y.trait.sd","y.trait.median","y.trait.skewness","y.trait.kurtosis","y.pic.trait.mean","y.pic.trait.sd","y.pic.trait.mediam","y.pic.trait.skewness","y.pic.trait.kurtosis","y.pic.trait.K","y.pic.trait.lambda")
+  x1.sumstat.ougbm<-array(NA,c(12,sims))
+  rownames(x1.sumstat.ougbm)<-c("x1.trait.mean","x1.trait.sd","x1.trait.median","x1.trait.skewness","x1.trait.kurtosis","x1.pic.trait.mean","x1.pic.trait.sd","x1.pic.trait.mediam","x1.pic.trait.skewness","x1.pic.trait.kurtosis","x1.pic.trait.K","x1.pic.trait.lambda")
+  x2.sumstat.ougbm<-array(NA,c(12,sims))
+  rownames(x2.sumstat.ougbm)<-c("x2.trait.mean","x2.trait.sd","x2.trait.median","x2.trait.skewness","x2.trait.kurtosis","x2.pic.trait.mean","x2.pic.trait.sd","x2.pic.trait.mediam","x2.pic.trait.skewness","x2.pic.trait.kurtosis","x2.pic.trait.K","x2.pic.trait.lambda")
+
+  for(simIndex in 1:sims){
+    if(simIndex %%100==0){print(paste("ougbm",simIndex,sep=""))}
+    #print(paste("ougbm simIndex= ",simIndex,sep=""))
+    prior.params<-ougbmprior(prior.model.params = prior.model.params, prior.reg.params = prior.reg.params)
+    model.params.ougbm[,simIndex]<-prior.params$model.params#for record only
+    reg.params.ougbm[,simIndex]<-prior.params$reg.params#for record only
+
+    sim.trait <-ougbmmodel(model.params=prior.params$model.params,reg.params=prior.params$reg.params,root=root,tree=tree)
+    sim.ougbm.trait[,1,simIndex]<-sim.trait$y
+    sim.ougbm.trait[,2,simIndex]<-sim.trait$x1
+    sim.ougbm.trait[,3,simIndex]<-sim.trait$x2
+    y.sumstat.ougbm[,simIndex]<- sumstat(trait=sim.trait$y,tree=tree)
+    x1.sumstat.ougbm[,simIndex]<- sumstat(trait=sim.trait$x1,tree=tree)
+    x2.sumstat.ougbm[,simIndex]<- sumstat(trait=sim.trait$x2,tree=tree)
+  }# end of loop
+
+  sumstat.ougbm <- cbind(t(y.sumstat.ougbm),t(x1.sumstat.ougbm),t(x2.sumstat.ougbm))
+  ougbm.par.sim <- cbind(t(model.params.ougbm),t(reg.params.ougbm))
+
+  return(list(sumstat.ougbm=sumstat.ougbm,ougbm.par.sim=ougbm.par.sim))
+}
+
+
+### ouqbm
+
+#' Simulate traits under ouqbm model given a set of parameters
+#'
+#' Simulate traits under ouqbm model given a set of model parameters, regression parameters, tree and ancestral values.
+#'
+#' The model requires user to input  model parameters \eqn{\alpha_y, \sigma^2_x,\tau} and regression parameters \eqn{b_0,b_1,b_2}, a tree object, trait dataset (one response, two covariate), ancestral values(root) which is estimated by BM or OU model from \code{\link[geiger:fitContinuous]{geiger}}. Then the algorithm starts from the root and apply the tree traversal algorithm to simulate trait on each node according the ouqbm dynamics.
+#'
+#' @param model.params  A vector of model parameters including alpha.y: force parameter of response trait, sigmasq.x: rate parameter of covariate and tau: rate parameter of response trait
+#' @param reg.params A vector of regression paramters including  b0: intercept parameter of regression, b1: slope parameter of first covariate,  b2: slope paramter of the second covariate
+#' @param root A vector of numerical values for root of species estimated from \code{OUprior} estimated from \code{OUprior}
+#' @param tree  An ape: tree object stored in phylo format
+#'
+#' @return Returns the trait vectors \eqn{Y=(y_1,y_2,\cdots,y_n)', X_1=(x_{1,1},x_{1.2},\cdots,x_{1,n})',X_2=(x_{2,1},x_{2,2},\cdots,x_{2,n})'} simulated from the model.
+#'
+#'
+#'
+#' @references
+#'  \enumerate{
+#'   \item Jhwueng, D. C. (2020). Modeling rate of adaptive trait evolution using Cox–Ingersoll–Ross process: An Approximate Bayesian Computation approach. Computational Statistics & Data Analysis, 145, 106924.
+#'   \item Jhwueng, D-C., and Vasileios Maroulas. "Adaptive trait evolution in random environment." Journal of Applied Statistics 43.12 (2016): 2310-2324.
+#'   \item Hansen, Thomas F., Jason Pienaar, and Steven Hecht Orzack. "A comparative method for studying adaptation to a randomly evolving environment." Evolution: International Journal of Organic Evolution 62.8 (2008): 1965-1977.
+#' }
+#'
+#'
+#' @examples
+#' library(ape)
+#' tree<-rcoal(5)
+#' tree<-reorder(tree,"postorder")
+#' root<-list(y.ou.sigmsq=1 ,y.ou.root=0, x1.ou.root=0, x2.ou.root=0,x1.bm.root=0, x2.bm.root=0)
+#' model.params<-c(0.5,1,0.2)
+#' names(model.params)<-c("alpha.y","sigmasq.x","tau")
+#' reg.params<-c(0,1,1)
+#' names(reg.params)<-c("b0","b1","b2")
+#' ouqbmmodel(model.params,reg.params,root=root,tree=tree)
+#'
+#' @import stats ape coda Sim.DiffProc MCMCpack abc phytools nlme TreeSim adephylo maps geiger EasyABC
+#'
+#' @import utils
+#'
+#' @export
+ouqbmmodel<-function(model.params,reg.params,root=root,tree=tree){
+  alpha.y<-model.params[1]
+  pos <- 1
+  envir = as.environment(pos)
+  assign("alpha.y", alpha.y, envir = envir)
+
+  sigmasq.x<-model.params[2]
+  sigma.x<-sqrt(sigmasq.x)
+  pos <- 1
+  envir = as.environment(pos)
+  assign("sigma.x", sigma.x, envir = envir)
+
+  tau<-model.params[3]
+  pos <- 1
+  envir = as.environment(pos)
+  assign("tau", tau, envir = envir)
+
+  b0<-reg.params[1]
+  b1<-reg.params[2]
+  b2<-reg.params[3]
+
+  n<-Ntip(tree)
+  x1nodestates<-array(NA,c(2*n-1))
+  x1nodestates[n+1]<- root$x1.bm.root
+  x2nodestates<-array(NA,c(2*n-1))
+  x2nodestates[n+1]<- root$x2.bm.root
+  optimnodestates<-array(NA,c(2*n-1))
+  optimnodestates[n+1]<-  b0+b1*(root$x1.bm.root-b2)^2
+
+  ynodestates<-array(NA,c(2*n-1))
+  ynodestates[n+1]<-root$y.ou.root
+
+  N<-dim(tree$edge)[1]
+  anc<-tree$edge[,1]
+  des<-tree$edge[,2]
+  treelength<-tree$edge.length
+  for(index in N:1){
+    x1nodestates[des[index]]<-rnorm(n=1,mean=x1nodestates[anc[index]],sd= sqrt(sigmasq.x*treelength[index]))
+    x2nodestates[des[index]]<-rnorm(n=1,mean=x2nodestates[anc[index]],sd= sqrt(sigmasq.x*treelength[index]))
+    optimnodestates[des[index]]<- b0+b1*(x1nodestates[des[index]]-b2)^2
+    t<-treelength[index]
+
+    IntPart1.1<-(b0+b1*b2^2)*(1-exp(-alpha.y*t))
+
+    intew<-expression(exp(alpha.y*t)*w)
+    intewdw<-st.int(intew,type="ito",M=1,lower=0,upper=t)
+    intewdw.med<-median(intewdw$X)
+    bt<-2*exp(-alpha.y*t)*intewdw.med + (1-exp(-alpha.y*t))
+    IntPart1.2<-b1*sigma.x^2*rnorm(1,0,sqrt(t))^2-b1*sigma.x^2*alpha.y*bt
+    IntPart1.3<--2*b1*b2*sigma.x*(rnorm(1,0,sqrt(t)) - exp(-alpha.y*t)*rnorm(1,0, sqrt((exp(2*alpha.y*t)-1)/2/alpha.y)))
+    IntPart1<-IntPart1.1+IntPart1.2+IntPart1.3
+    IntPart2 <- tau*rnorm(1,mean=0,sd= sqrt((1-exp(-2*alpha.y*t))/2/alpha.y))
+    ynodestates[des[index]]<- exp(-alpha.y*t)*ynodestates[anc[index]] +  IntPart1 + IntPart2
+
+  }
+  simtrait<-ynodestates[1:n]
+  return(list(y=simtrait,x1=x1nodestates[1:n],x2=x2nodestates[1:n]))
+}
+
+#' Draw prior samples for ouqbm model
+#'
+#' Simulate sample for parameters in ouqbm model given a set of hyper parameters
+#'
+#' The function requires user to input hyper parameters for \eqn{\alpha_y, \sigma^2_x,\tau} and hyper parameters for regression parameters \eqn{b_0,b_1,b_2} from uniform distribution with its minimum and maximum values.
+#'
+#' @param prior.model.params  A vectors of hyper parameters for model parameter containing (alpha.y.min, alpha.y.max) for alpha.y, (sigmasq.x.min, sigmasq.x.max) for sigmasq.x, (tau.y.min, tau.max) for rate parameter of tau
+#' @param prior.reg.params A vector of hyper paramter for regression parameters. (b0.min,b0.max) for b0, (b1.min,b1.max) for b1,  (b2.min,b2.max) for b2
+#'
+#' @return Returns the  samples of model parameters and regression parameter
+#'
+#' @export
+#'
+#' @examples
+#'
+#' prior.model.params<-c(0,3,0,3,0,1)
+#'
+#' names(prior.model.params)<-c("alpha.y.min","alpha.y.max",
+#'
+#' "tau.min","tau.max","sigmasq.x.min","sigmasq.x.max")
+#'
+#' prior.reg.params<-c(-3, 3, -3, 3, -3, 3)
+#' names(prior.reg.params)<-c("b0.min", "b0.max", "b1.min", "b1.max", "b2.min", "b2.max")
+#' ouqbmprior(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params)
+#'
+#'
+ouqbmprior<-function(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params){
+  alpha.y.min <-prior.model.params["alpha.y.min"]
+  alpha.y.max <-prior.model.params["alpha.y.max"]
+  sigmasq.x.min <-prior.model.params["sigmasq.x.min"]
+  sigmasq.x.max <-prior.model.params["sigmasq.x.max"]
+  tau.min <- prior.model.params["tau.min"]
+  tau.max <- prior.model.params["tau.max"]
+
+  alpha.y<-runif(n=1,min=alpha.y.min,max=alpha.y.max)
+  sigmasq.x<-runif(n=1,min=sigmasq.x.min,max=sigmasq.x.max)
+  tau<-runif(n=1,min=tau.min,max=tau.max)
+
+  b0.min<-prior.reg.params[1]
+  b0.max<-prior.reg.params[2]
+  b1.min<-prior.reg.params[3]
+  b1.max<-prior.reg.params[4]
+  b2.min<-prior.reg.params[5]
+  b2.max<-prior.reg.params[6]
+  b0<-runif(n=1, min=b0.min, max=b0.max)
+  b1<-runif(n=1, min=b1.min, max=b1.max)
+  b2<-runif(n=1, min=b2.min, max=b2.max)
+
+  model.params<-c(alpha.y, sigmasq.x, tau)
+  reg.params<- c(b0, b1, b2)
+
+  return(list(model.params=model.params, reg.params=reg.params))
+}
+
+
+###############
+### ouqbmTrait ###
+##############
+#' Parameter samples and summary statistics
+#'
+#' Draw sample for parameters, simulate trait and compute the summary statistics for ouqbm model
+#'
+#' Given tree, trait sets, function \code{\link{HyperParam}} is called to yield the range of parameters, then function \code{\link{ouqbmprior}} is called to draw sample for parameter, then the function \code{\link{ouqbmmodel}} is applied to simulate traits through post order tree traversal algorithm, finally the summary statistics is computed by function \code{\link{sumstat}}.
+#'
+#' @param tree   An ape: tree object stored in phylo format
+#' @param traitset a dataframe that contains 3 traits
+#' @param sims number of trait replicate
+#'
+#' @return A list of vectors containing a dataframe of summary statistics, and a dataframe of parameter samples
+#'
+#' @export
+#'
+#'
+#' @examples
+#'
+#' ## using bat dataset (running time more > 5 sec)
+#' \donttest{
+#' data(bat)
+#' tree<-bat$tree
+#' traitset<-bat$traitset
+#' sims<-10
+#' ouqbmTrait(tree=tree,traitset=traitset,sims=sims)
+#'}
+ouqbmTrait<-function(tree=tree,traitset=traitset,sims=sims){
+  prior.params<-HyperParam(tree=tree,traitset=traitset)
+  prior.model.params<-prior.params$prior.model.params
+  prior.reg.params<-prior.params$prior.reg.params
+  prior.params.ouqbm <- ouqbmprior(prior.model.params = prior.model.params, prior.reg.params = prior.reg.params)
+  root<-prior.params$root
+  sim.ouqbm.trait<-array(NA,c(dim(traitset)[1],3,sims))
+  model.params.ouqbm<-array(NA,c(3,sims))
+  rownames(model.params.ouqbm)<-c("alpha.y","sigmasq.x","tau")
+  reg.params.ouqbm<-array(NA,c(3,sims))
+  row.names(reg.params.ouqbm)<-c("b0", "b1", "b2")
+  y.sumstat.ouqbm<-array(NA,c(12,sims))
+  rownames(y.sumstat.ouqbm)<-c("y.trait.mean","y.trait.sd","y.trait.median","y.trait.skewness","y.trait.kurtosis","y.pic.trait.mean","y.pic.trait.sd","y.pic.trait.mediam","y.pic.trait.skewness","y.pic.trait.kurtosis","y.pic.trait.K","y.pic.trait.lambda")
+  x1.sumstat.ouqbm<-array(NA,c(12,sims))
+  rownames(x1.sumstat.ouqbm)<-c("x1.trait.mean","x1.trait.sd","x1.trait.median","x1.trait.skewness","x1.trait.kurtosis","x1.pic.trait.mean","x1.pic.trait.sd","x1.pic.trait.mediam","x1.pic.trait.skewness","x1.pic.trait.kurtosis","x1.pic.trait.K","x1.pic.trait.lambda")
+  x2.sumstat.ouqbm<-array(NA,c(12,sims))
+  rownames(x2.sumstat.ouqbm)<-c("x2.trait.mean","x2.trait.sd","x2.trait.median","x2.trait.skewness","x2.trait.kurtosis","x2.pic.trait.mean","x2.pic.trait.sd","x2.pic.trait.mediam","x2.pic.trait.skewness","x2.pic.trait.kurtosis","x2.pic.trait.K","x2.pic.trait.lambda")
+
+  for(simIndex in 1:sims){
+    if(simIndex %%100==0){print(paste("ouqbm",simIndex,sep=""))}
+    #print(paste("ouqbm simIndex= ",simIndex,sep=""))
+    prior.params<-ouqbmprior(prior.model.params = prior.model.params, prior.reg.params = prior.reg.params)
+    model.params.ouqbm[,simIndex]<-prior.params$model.params#for record only
+    reg.params.ouqbm[,simIndex]<-prior.params$reg.params#for record only
+
+    sim.trait <-ouqbmmodel(model.params=prior.params$model.params,reg.params=prior.params$reg.params,root=root,tree=tree)
+    sim.ouqbm.trait[,1,simIndex]<-sim.trait$y
+    sim.ouqbm.trait[,2,simIndex]<-sim.trait$x1
+    sim.ouqbm.trait[,3,simIndex]<-sim.trait$x2
+    y.sumstat.ouqbm[,simIndex]<- sumstat(trait=sim.trait$y,tree=tree)
+    x1.sumstat.ouqbm[,simIndex]<- sumstat(trait=sim.trait$x1,tree=tree)
+    x2.sumstat.ouqbm[,simIndex]<- sumstat(trait=sim.trait$x2,tree=tree)
+  }# end of loop
+
+  sumstat.ouqbm <- cbind(t(y.sumstat.ouqbm),t(x1.sumstat.ouqbm),t(x2.sumstat.ouqbm))
+  ouqbm.par.sim <- cbind(t(model.params.ouqbm),t(reg.params.ouqbm))
+
+  return(list(sumstat.ouqbm=sumstat.ouqbm,ouqbm.par.sim=ouqbm.par.sim))
+}
+
+
+### ougou
+#' Simulate traits under ougou model given a set of parameters
+#'
+#' Simulate traits under ougou model given a set of model parameters, regression parameters, tree and ancestral values.
+#'
+#' The model requires user to input  model parameters \eqn{\alpha_y,\alpha_x,\theta_x, \sigma^2_x,\tau} and regression parameters \eqn{b_0,b_1,b_2}, a tree object, trait dataset (one response, two covariate), ancestral values(root) which is estimated by BM or OU model from \code{\link[geiger:fitContinuous]{geiger}}. Then the algorithm starts from the root and apply the tree traversal algorithm to simulate trait on each node according the ougou dynamics.
+#'
+#'
+#'
+#'
+#' @param model.params  A vector of model parameters including alpha.y: force parameter of response trait, alpha.x: force parameter of covariate, theta.x: optimum parameter of covariate, sigmasq.x: rate parameter of covariate and tau rate parameter of response trait
+#'
+#' @param reg.params A vector of regression paramters including  b0: intercept parameter of regression, b1: slope parameter of first covariate,  b2: slope paramter of the second covariate
+#' @param root A vector of numerical values for root of species estimated from \code{OUprior}
+#' @param tree  An ape: tree object stored in phylo format
+#'
+#' @return Returns the trait vectors \eqn{Y=(y_1,y_2,\cdots,y_n)', X_1=(x_{1,1},x_{1.2},\cdots,x_{1,n})',X_2=(x_{2,1},x_{2,2},\cdots,x_{2,n})'} simulated from the model.
+#'
+#' @export
+#'
+#' @references
+#'  \enumerate{
+#'   \item Jhwueng, D-C. (2019) Statistical modeling for adaptive trait evolution. Under review.
+#'   \item Jhwueng, D-C., and Vasileios Maroulas. "Adaptive trait evolution in random environment." Journal of Applied Statistics 43.12 (2016): 2310-2324.
+#'   \item Hansen, Thomas F., Jason Pienaar, and Steven Hecht Orzack. "A comparative method for studying adaptation to a randomly evolving environment." Evolution: International Journal of Organic Evolution 62.8 (2008): 1965-1977.
+#' }
+#'
+#'
+#' @examples
+#'library(ape)
+#'tree<-rcoal(5)
+#'tree<-reorder(tree,"postorder")
+#'root<-list(y.ou.sigmsq=1 ,y.ou.root=0, x1.ou.root=0, x2.ou.root=0,x1.bm.root=0, x2.bm.root=0)
+#'model.params<-c(0.5,0.25,0,1,0.2)
+#'names(model.params)<-c("alpha.y","alpha.x","theta.x","sigmasq.x","tau")
+#'reg.params<-c(0,1,1)
+#'names(reg.params)<-c("b0","b1","b2")
+#'ougoumodel(model.params,reg.params,root=root,tree=tree)
+#'
+#'
+ougoumodel<-function(model.params,reg.params,root=root,tree=tree){
+  alpha.y<-model.params[1]
+  pos <- 1
+  envir = as.environment(pos)
+  assign("alpha.y", alpha.y, envir = envir)
+
+  alpha.x<-model.params[2]
+  pos <- 1
+  envir = as.environment(pos)
+  assign("alpha.x", alpha.x, envir = envir)
+
+  theta.x<-model.params[3]
+  pos <- 1
+  envir = as.environment(pos)
+  assign("theta.x", theta.x, envir = envir)
+
+  sigmasq.x<-model.params[4]
+  sigma.x<-sqrt(sigmasq.x)
+  pos <- 1
+  envir = as.environment(pos)
+  assign("sigma.x", sigma.x, envir = envir)
+
+  tau<-model.params[5]
+  pos <- 1
+  envir = as.environment(pos)
+  assign("tau", tau, envir = envir)
+
+  b0<-reg.params[1]
+  b1<-reg.params[2]
+  b2<-reg.params[3]
+
+  n<-Ntip(tree)
+  x1nodestates<-array(NA,c(2*n-1))
+  x1nodestates[n+1]<- root$x1.ou.root
+  x2nodestates<-array(NA,c(2*n-1))
+  x2nodestates[n+1]<- root$x2.ou.root
+  optimnodestates<-array(NA,c(2*n-1))
+  optimnodestates[n+1]<- b0+b1*exp(b2*root$x1.ou.root)
+  ynodestates<-array(NA,c(2*n-1))
+  ynodestates[n+1]<-root$y.ou.root
+
+  N<-dim(tree$edge)[1]
+  anc<-tree$edge[,1]
+  des<-tree$edge[,2]
+  treelength<-tree$edge.length
+
+  for(index in N:1){
+    t<-treelength[index]
+    x1ou.mean<-x1nodestates[anc[index]]*exp(-alpha.x*treelength[index]) + theta.x*(1-exp(-alpha.x*treelength[index]))
+    x1ou.sd<-sqrt((sigmasq.x/(2*alpha.x))*(1-exp(-2*alpha.x*treelength[index])))
+    if(x1ou.sd<1e-10){x1ou.sd<-sigmasq.x*treelength[index]}
+    x1nodestates[des[index]]<-rnorm(n=1,mean=x1ou.mean,sd=x1ou.sd)
+
+    x2ou.mean<-x2nodestates[anc[index]]*exp(-alpha.x*treelength[index]) + theta.x*(1-exp(-alpha.x*treelength[index]))
+    x2ou.sd<-sqrt((sigmasq.x/(2*alpha.x))*(1-exp(-2*alpha.x*treelength[index])))
+    if(x2ou.sd<1e-10){x2ou.sd<-sigmasq.x*treelength[index]}
+    x2nodestates[des[index]]<-rnorm(n=1,mean=x2ou.mean,sd=x2ou.sd)
+
+    optimnodestates[des[index]]<- b0+b1*exp(b2*x1nodestates[des[index]])
+    sigmasq.theta<- b1^2*sigmasq.x + b2^2*sigmasq.x
+
+    intgrand<-function(s,alpha.y=alpha.y,alpha.x=alpha.x,theta.x=theta.x,sigma.x=sigma.x,b2=b2){
+      return(exp(-alpha.y*s + theta.x + exp(-alpha.x*b2*s)*(b2*x1nodestates[anc[index]] - 1 + sigma.x*b2*rnorm(1,0, sqrt( (exp(2*alpha.x*b2*s)-1)/2/alpha.x/b2)))))
+    }
+
+    simpsongou<-function(t, alpha.y=alpha.y,alpha.x=alpha.x,theta.x=theta.x,sigma.x=sigma.x,b2=b2){
+      a<-0;b<-t/2; c<-t
+      fa<-intgrand(a,alpha.y=alpha.y,alpha.x=alpha.x,theta.x=theta.x,sigma.x=sigma.x,b2=b2)
+      fb<-intgrand(b,alpha.y=alpha.y,alpha.x=alpha.x,theta.x=theta.x,sigma.x=sigma.x,b2=b2)
+      fc<-intgrand(c,alpha.y=alpha.y,alpha.x=alpha.x,theta.x=theta.x,sigma.x=sigma.x,b2=b2)
+      return(t/6*(fa+4*fb+fc))
+    }
+    Intgeoou<- simpsongou(t,alpha.y=alpha.y,alpha.x=alpha.x,theta.x=theta.x,sigma.x=sigma.x,b2=b2)
+    #integral(intgrand,0,t,alpha.y=alpha.y,alpha.x=alpha.x,theta.x=theta.x,sigma.x=sigma.x,b2=b2,method="Simpson",reltol = 1e-2)
+
+    IntPart1 <- b0*(1-exp(-alpha.y*t)) + b1*alpha.y*exp(-alpha.y*t)*Intgeoou
+    IntPart2 <- tau*rnorm(1,mean=0,sd= sqrt((1-exp(-2*alpha.y*t))/2/alpha.y))
+
+    ynodestates[des[index]]<- exp(-alpha.y*t)*ynodestates[anc[index]] +  IntPart1 + IntPart2
+  }
+
+  simtrait<-ynodestates[1:n]
+  return(list(y=simtrait,x1=x1nodestates[1:n],x2=x2nodestates[1:n]))
+}
+
+
+#' Draw prior samples for ougou model
+#'
+#' Simulate sample for parameters in ougou model given a set of hyper parameters
+#'
+#' The function requires user to input hyper parameters for \eqn{\alpha_y,\alpha_x,\theta_x, \sigma^2_x,\tau} and hyper parameters for regression parameters \eqn{b_0,b_1,b_2} from uniform distribution with its minimum and maximum values.
+#'
+#' @param prior.model.params  A vectors of hyper parameters for model parameter containing (alpha.y.min, alpha.y.max) for alpha.y, (alpha.x.min, alpha.x.max) for alpha.x,(theta.y.min, theta.y.max) for theta.y, (sigmasq.x.min, sigmasq.x.max) for sigmasq.x, (tau.y.min, tau.max) for rate parameter of tau
+#' @param prior.reg.params A vector of hyper paramter for regression parameters. (b0.min,b0.max) for b0, (b1.min,b1.max) for b1,  (b2.min,b2.max) for b2
+#'
+#' @return Returns the  samples of model parameters and regression parameter
+#'
+#' @export
+#'
+#' @examples
+#'
+#'prior.model.params<-c(0,3,0,3,-5,5,0,1,0,2)
+#'names(prior.model.params)<-c(
+#'
+#'"alpha.y.min","alpha.y.max","alpha.x.min","alpha.x.max",
+#'
+#'"theta.x.min","theta.x.max","sigmasq.x.min","sigmasq.x.max",
+#'
+#'"tau.min","tau.max")
+#'prior.reg.params<-c(-3, 3, -3, 3, -3, 3)
+#'names(prior.reg.params)<-c("b0.min", "b0.max", "b1.min", "b1.max", "b2.min", "b2.max")
+#'ougouprior(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params)
+#'
+#'
+ougouprior<-function(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params){
+  alpha.y.min <-prior.model.params["alpha.y.min"]
+  alpha.y.max <-prior.model.params["alpha.y.max"]
+  alpha.x.min <- prior.model.params["alpha.x.min"]
+  alpha.x.max <- prior.model.params["alpha.x.max"]
+  theta.x.min <-prior.model.params["theta.x.min"]
+  theta.x.max <- prior.model.params["theta.x.max"]
+  sigmasq.x.min <-prior.model.params["sigmasq.x.min"]
+  sigmasq.x.max <- prior.model.params["sigmasq.x.max"]
+  tau.min <- prior.model.params["tau.min"]
+  tau.max <- prior.model.params["tau.max"]
+
+  alpha.y<-runif(n=1,min=alpha.y.min,max=alpha.y.max)
+  alpha.x<-runif(n=1,min=alpha.x.min,max=alpha.x.max)
+  theta.x<-runif(n=1,min=theta.x.min,max=theta.x.max)
+  sigmasq.x<-runif(n=1,min=sigmasq.x.min,max=sigmasq.x.max)
+  tau<-runif(n=1,min=tau.min,max=tau.max)
+
+  b0.min<-prior.reg.params[1]
+  b0.max<-prior.reg.params[2]
+  b1.min<-prior.reg.params[3]
+  b1.max<-prior.reg.params[4]
+  b2.min<-prior.reg.params[5]
+  b2.max<-prior.reg.params[6]
+  b0<-runif(n=1, min=b0.min, max=b0.max)
+  b1<-runif(n=1, min=b1.min, max=b1.max)
+  b2<-runif(n=1, min=b2.min, max=b2.max)
+
+  model.params<-c(alpha.y, alpha.x, theta.x, sigmasq.x, tau)
+  reg.params<- c(b0, b1, b2)
+
+  return(list(model.params=model.params, reg.params=reg.params))
+}
+
+###############
+### ougou ###
+##############
+#' Parameter samples and summary statistics
+#'
+#' Draw sample for parameters, simulate trait and compute the summary statistics for ougou model
+#'
+#' Given tree, trait sets, function \code{\link{HyperParam}} is called to yield the range of parameters, then function \code{\link{oubmbmprior}} is called to draw sample for parameter, then the function \code{\link{oubmbmmodel}} is applied to simulate traits through post order tree traversal algorithm, finally the summary statistics is computed by function \code{\link{sumstat}}.
+#'
+#' @param tree   An ape: tree object stored in phylo format
+#' @param traitset a dataframe that contains 3 traits
+#' @param sims number of trait replicate
+#'
+#' @return A list of vectors containing a dataframe of summary statistics, and a dataframe of parameter samples
+#'
+#' @export
+#'
+#'
+#' @examples
+#'
+#' ## using lizard dataset (running time more > 5 sec)
+#' \donttest{
+#' data(lizard)
+#' tree<-lizard$tree
+#' traitset<-lizard$traitset
+#' sims<-10
+#' ougouTrait(tree=tree,traitset=traitset,sims=sims)
+#'}
+
+ougouTrait<-function(tree=tree,traitset=traitset,sims=sims){
+  prior.params<-HyperParam(tree=tree,traitset=traitset)
+  prior.model.params<-prior.params$prior.model.params
+  prior.reg.params<-prior.params$prior.reg.params
+  prior.params.ougou <- ougouprior(prior.model.params = prior.model.params, prior.reg.params = prior.reg.params)
+  sim.ougou.trait<-array(NA,c(dim(traitset)[1],5,sims))
+  root<-prior.params$root
+  model.params.ougou<-array(NA,c(5,sims))
+  rownames(model.params.ougou)<-c("alpha.y","alpha.x","theta.x","sigmasq.x","tau")
+  reg.params.ougou<-array(NA,c(3,sims))
+  row.names(reg.params.ougou)<-c("b0", "b1", "b2")
+  y.sumstat.ougou<-array(NA,c(12,sims))
+  rownames(y.sumstat.ougou)<-c("y.trait.mean","y.trait.sd","y.trait.median","y.trait.skewness","y.trait.kurtosis","y.pic.trait.mean","y.pic.trait.sd","y.pic.trait.mediam","y.pic.trait.skewness","y.pic.trait.kurtosis","y.pic.trait.K","y.pic.trait.lambda")
+  x1.sumstat.ougou<-array(NA,c(12,sims))
+  rownames(x1.sumstat.ougou)<-c("x1.trait.mean","x1.trait.sd","x1.trait.median","x1.trait.skewness","x1.trait.kurtosis","x1.pic.trait.mean","x1.pic.trait.sd","x1.pic.trait.mediam","x1.pic.trait.skewness","x1.pic.trait.kurtosis","x1.pic.trait.K","x1.pic.trait.lambda")
+  x2.sumstat.ougou<-array(NA,c(12,sims))
+  rownames(x2.sumstat.ougou)<-c("x2.trait.mean","x2.trait.sd","x2.trait.median","x2.trait.skewness","x2.trait.kurtosis","x2.pic.trait.mean","x2.pic.trait.sd","x2.pic.trait.mediam","x2.pic.trait.skewness","x2.pic.trait.kurtosis","x2.pic.trait.K","x2.pic.trait.lambda")
+  # rownames(post.model.params.ougou)<-c("alpha.y","alpha.x","theta.x","sigma.x","tau")
+  # row.names(post.reg.params.ougou)<-c("b0", "b1", "b2")
+  for(simIndex in 1:sims){
+    if(simIndex %%100==0){print(paste("ougou",simIndex,sep=""))}
+    #simIndex<-2
+    #print(paste("ougou simIndex= ",simIndex,sep=""))
+    prior.params <- ougouprior(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params)
+    model.params.ougou[,simIndex]<-prior.params$model.params#for record only
+    reg.params.ougou[,simIndex]<-prior.params$reg.params#for record only
+
+    sim.trait <-ougoumodel(model.params=prior.params$model.params,reg.params=prior.params$reg.params,root=root,tree=tree)
+    sim.ougou.trait[,1,simIndex]<-sim.trait$y
+    sim.ougou.trait[,2,simIndex]<-sim.trait$x1
+    sim.ougou.trait[,3,simIndex]<-sim.trait$x2
+    y.sumstat.ougou[,simIndex]<- sumstat(trait=sim.trait$y,tree=tree)
+    x1.sumstat.ougou[,simIndex]<- sumstat(trait=sim.trait$x1,tree=tree)
+    x2.sumstat.ougou[,simIndex]<- sumstat(trait=sim.trait$x2,tree=tree)
+  }#end of loop
+  sumstat.ougou <- cbind(t(y.sumstat.ougou),t(x1.sumstat.ougou),t(x2.sumstat.ougou))
+  ougou.par.sim <- cbind(t(model.params.ougou),t(reg.params.ougou))
+  return(list(sumstat.ougou=sumstat.ougou,ougou.par.sim=ougou.par.sim))
+}
+
+
+### ouqou
+#' Simulate traits under ouqou model given a set of parameters
+#'
+#' Simulate traits under ouqou model given a set of model parameters, regression parameters, tree and ancestral values.
+#'
+#' The model requires user to input  model parameters \eqn{\alpha_y,\alpha_x,\theta_x, \sigma^2_x,\tau} and regression parameters \eqn{b_0,b_1,b_2}, a tree object, trait dataset (one response, two covariate), ancestral values(root) which is estimated by BM or OU model from \code{\link[geiger:fitContinuous]{geiger}}. Then the algorithm starts from the root and apply the tree traversal algorithm to simulate trait on each node according the ouqou dynamics.
+#'
+#'
+#'
+#'
+#' @param model.params  A vector of model parameters including alpha.y: force parameter of response trait, alpha.x: force parameter of covariate, theta.x: optimum parameter of covariate, sigmasq.x: rate parameter of covariate and tau rate parameter of response trait
+#'
+#' @param reg.params A vector of regression paramters including  b0: intercept parameter of regression, b1: slope parameter of first covariate,  b2: slope paramter of the second covariate
+#' @param root A vector of numerical values for root of species estimated from \code{OUprior}
+#' @param tree  An ape: tree object stored in phylo format
+#'
+#' @return Returns the trait vectors \eqn{Y=(y_1,y_2,\cdots,y_n)', X_1=(x_{1,1},x_{1.2},\cdots,x_{1,n})',X_2=(x_{2,1},x_{2,2},\cdots,x_{2,n})'} simulated from the model.
+#'
+#' @export
+#'
+#' @references
+#'  \enumerate{
+#'   \item Jhwueng, D-C. (2019) Statistical modeling for adaptive trait evolution. Under review.
+#'   \item Jhwueng, D-C., and Vasileios Maroulas. "Adaptive trait evolution in random environment." Journal of Applied Statistics 43.12 (2016): 2310-2324.
+#'   \item Hansen, Thomas F., Jason Pienaar, and Steven Hecht Orzack. "A comparative method for studying adaptation to a randomly evolving environment." Evolution: International Journal of Organic Evolution 62.8 (2008): 1965-1977.
+#' }
+#'
+#'
+#' @examples
+#'library(ape)
+#'tree<-rcoal(5)
+#'tree<-reorder(tree,"postorder")
+#'root<-list(y.ou.sigmsq=1 ,y.ou.root=0, x1.ou.root=0, x2.ou.root=0,x1.bm.root=0, x2.bm.root=0)
+#'model.params<-c(0.5,0.25,0,1,0.2)
+#'names(model.params)<-c("alpha.y","alpha.x","theta.x","sigmasq.x","tau")
+#'reg.params<-c(0,1,1)
+#'names(reg.params)<-c("b0","b1","b2")
+#'ouqoumodel(model.params,reg.params,root=root,tree=tree)
+#'
+#'
+ouqoumodel<-function(model.params,reg.params,root=root,tree=tree){
+  alpha.y<-model.params[1]
+  pos <- 1
+  envir = as.environment(pos)
+  assign("alpha.y", alpha.y, envir = envir)
+
+  alpha.x<-model.params[2]
+  pos <- 1
+  envir = as.environment(pos)
+  assign("alpha.x", alpha.x, envir = envir)
+
+  theta.x<-model.params[3]
+  pos <- 1
+  envir = as.environment(pos)
+  assign("theta.x", theta.x, envir = envir)
+
+  sigmasq.x<-model.params[4]
+  sigma.x<-sqrt(sigmasq.x)
+  pos <- 1
+  envir = as.environment(pos)
+  assign("sigma.x", sigma.x, envir = envir)
+
+  tau<-model.params[5]
+  pos <- 1
+  envir = as.environment(pos)
+  assign("tau", tau, envir = envir)
+
+  b0<-reg.params[1]
+  b1<-reg.params[2]
+  b2<-reg.params[3]
+
+  n<-Ntip(tree)
+  x1nodestates<-array(NA,c(2*n-1))
+  x1nodestates[n+1]<- root$x1.ou.root
+  x2nodestates<-array(NA,c(2*n-1))
+  x2nodestates[n+1]<- root$x2.ou.root
+  optimnodestates<-array(NA,c(2*n-1))
+  optimnodestates[n+1]<-  b0+b1*(root$x1.ou.root-b2)^2
+  ynodestates<-array(NA,c(2*n-1))
+  ynodestates[n+1]<-root$y.ou.root
+
+  N<-dim(tree$edge)[1]
+  anc<-tree$edge[,1]
+  des<-tree$edge[,2]
+  treelength<-tree$edge.length
+
+  for(index in N:1){
+    t<-treelength[index]
+    x1ou.mean<-x1nodestates[anc[index]]*exp(-alpha.x*treelength[index]) + theta.x*(1-exp(-alpha.x*treelength[index]))
+    x1ou.sd<-sqrt((sigmasq.x/(2*alpha.x))*(1-exp(-2*alpha.x*treelength[index])))
+    if(x1ou.sd<1e-10){x1ou.sd<-sigmasq.x*treelength[index]}
+    x1nodestates[des[index]]<-rnorm(n=1,mean=x1ou.mean,sd=x1ou.sd)
+
+    x2ou.mean<-x2nodestates[anc[index]]*exp(-alpha.x*treelength[index]) + theta.x*(1-exp(-alpha.x*treelength[index]))
+    x2ou.sd<-sqrt((sigmasq.x/(2*alpha.x))*(1-exp(-2*alpha.x*treelength[index])))
+    if(x2ou.sd<1e-10){x2ou.sd<-sigmasq.x*treelength[index]}
+    x2nodestates[des[index]]<-rnorm(n=1,mean=x2ou.mean,sd=x2ou.sd)
+
+    optimnodestates[des[index]]<- b0+b1*(x1nodestates[des[index]]-b2)^2
+    sigmasq.theta<- b1^2*sigmasq.x + b2^2*sigmasq.x
+
+    IntPart1.1 <-(b0+b1*b2^2)*(1-exp(-alpha.y*t))
+
+    IntPart1.2.1<-b1*theta.x^2*(1-exp(-alpha.y*t))
+    IntPart1.2.2<-alpha.y/(alpha.y-2*alpha.x)*b1*(x1nodestates[anc[index]]-theta.x+sigma.x)^2
+
+    expintexpw <- function(s,alpha.y=alpha.y,alpha.x=alpha.x){
+      return(rnorm(1,0,sqrt(exp((2*alpha.y-4*alpha.x)*s)*(exp(2*alpha.x*s)-1)/2/alpha.x)))
+    }
+    tgrid<-seq(0.01*t,t,length=3)
+    intexpintexpw <-0
+    for( tgridIndex in 2:length(tgrid)){
+      s<-tgrid[tgridIndex-1]
+      intexpintexpw <- intexpintexpw + expintexpw(s,alpha.y=alpha.y,alpha.x=alpha.x)*(rnorm(1,0,tgrid[tgridIndex]) -rnorm(1,0,tgrid[tgridIndex-1]))}
+
+    IntPart1.2.2<-IntPart1.2.2*(exp(-2*alpha.x*t)*(rnorm(1,0,sqrt((exp(2*alpha.x*t)-1)/2/alpha.x)))^2 - 2*exp(-alpha.y*t)*intexpintexpw)
+    IntPart1.2.3<- 2*alpha.y/(alpha.y-alpha.x)*b1*theta.x*(x1nodestates[anc[index]]-theta.x+sigma.x)*(rnorm(1,0,sqrt((1-exp(-alpha.x*t))/2/alpha.x))-rnorm(1,0,sqrt((1-exp(-alpha.y*t))/2/alpha.y)))
+    IntPart1.2 <-IntPart1.2.1+IntPart1.2.2+IntPart1.2.3
+
+    IntPart1.3 <-  -2*b1*b2*theta.x*(1-exp(-alpha.y*t)) - 2*alpha.y/(alpha.y-alpha.x)*b1*b2*( x1nodestates[anc[index]]-theta.x+sigma.x)*(rnorm(1,0,sqrt((1-exp(-alpha.x*t))/2/alpha.x))-rnorm(1,0,sqrt((1-exp(-alpha.y*t))/2/alpha.y)))
+
+    IntPart1<-IntPart1.1+IntPart1.2+IntPart1.3
+    IntPart2 <- tau*rnorm(1,mean=0,sd= sqrt((1-exp(-2*alpha.y*t))/2/alpha.y))
+    ynodestates[des[index]]<- exp(-alpha.y*t)*ynodestates[anc[index]] +  IntPart1 + IntPart2
+
+  }
+
+  simtrait<-ynodestates[1:n]
+  return(list(y=simtrait,x1=x1nodestates[1:n],x2=x2nodestates[1:n]))
+}
+
+
+#' Draw prior samples for ouqou model
+#'
+#' Simulate sample for parameters in ouqou model given a set of hyper parameters
+#'
+#' The function requires user to input hyper parameters for \eqn{\alpha_y,\alpha_x,\theta_x, \sigma^2_x,\tau} and hyper parameters for regression parameters \eqn{b_0,b_1,b_2} from uniform distribution with its minimum and maximum values.
+#'
+#' @param prior.model.params  A vectors of hyper parameters for model parameter containing (alpha.y.min, alpha.y.max) for alpha.y, (alpha.x.min, alpha.x.max) for alpha.x,(theta.y.min, theta.y.max) for theta.y, (sigmasq.x.min, sigmasq.x.max) for sigmasq.x, (tau.y.min, tau.max) for rate parameter of tau
+#' @param prior.reg.params A vector of hyper paramter for regression parameters. (b0.min,b0.max) for b0, (b1.min,b1.max) for b1,  (b2.min,b2.max) for b2
+#'
+#' @return Returns the  samples of model parameters and regression parameter
+#'
+#' @export
+#'
+#' @examples
+#'
+#'prior.model.params<-c(0,3,0,3,-5,5,0,1,0,2)
+#'names(prior.model.params)<-c(
+#'
+#'"alpha.y.min","alpha.y.max","alpha.x.min","alpha.x.max",
+#'
+#'"theta.x.min","theta.x.max","sigmasq.x.min","sigmasq.x.max",
+#'
+#'"tau.min","tau.max")
+#'prior.reg.params<-c(-3, 3, -3, 3, -3, 3)
+#'names(prior.reg.params)<-c("b0.min", "b0.max", "b1.min", "b1.max", "b2.min", "b2.max")
+#'ouqouprior(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params)
+#'
+#'
+ouqouprior<-function(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params){
+  alpha.y.min <-prior.model.params["alpha.y.min"]
+  alpha.y.max <-prior.model.params["alpha.y.max"]
+  alpha.x.min <- prior.model.params["alpha.x.min"]
+  alpha.x.max <- prior.model.params["alpha.x.max"]
+  theta.x.min <-prior.model.params["theta.x.min"]
+  theta.x.max <- prior.model.params["theta.x.max"]
+  sigmasq.x.min <-prior.model.params["sigmasq.x.min"]
+  sigmasq.x.max <- prior.model.params["sigmasq.x.max"]
+  tau.min <- prior.model.params["tau.min"]
+  tau.max <- prior.model.params["tau.max"]
+
+  alpha.y<-runif(n=1,min=alpha.y.min,max=alpha.y.max)
+  alpha.x<-runif(n=1,min=alpha.x.min,max=alpha.x.max)
+  theta.x<-runif(n=1,min=theta.x.min,max=theta.x.max)
+  sigmasq.x<-runif(n=1,min=sigmasq.x.min,max=sigmasq.x.max)
+  tau<-runif(n=1,min=tau.min,max=tau.max)
+
+  b0.min<-prior.reg.params[1]
+  b0.max<-prior.reg.params[2]
+  b1.min<-prior.reg.params[3]
+  b1.max<-prior.reg.params[4]
+  b2.min<-prior.reg.params[5]
+  b2.max<-prior.reg.params[6]
+  b0<-runif(n=1, min=b0.min, max=b0.max)
+  b1<-runif(n=1, min=b1.min, max=b1.max)
+  b2<-runif(n=1, min=b2.min, max=b2.max)
+
+  model.params<-c(alpha.y, alpha.x, theta.x, sigmasq.x, tau)
+  reg.params<- c(b0, b1, b2)
+
+  return(list(model.params=model.params, reg.params=reg.params))
+}
+
+###############
+### ouqou ###
+##############
+#' Parameter samples and summary statistics
+#'
+#' Draw sample for parameters, simulate trait and compute the summary statistics for ouqou model
+#'
+#' Given tree, trait sets, function \code{\link{HyperParam}} is called to yield the range of parameters, then function \code{\link{oubmbmprior}} is called to draw sample for parameter, then the function \code{\link{oubmbmmodel}} is applied to simulate traits through post order tree traversal algorithm, finally the summary statistics is computed by function \code{\link{sumstat}}.
+#'
+#' @param tree   An ape: tree object stored in phylo format
+#' @param traitset a dataframe that contains 3 traits
+#' @param sims number of trait replicate
+#'
+#' @return A list of vectors containing a dataframe of summary statistics, and a dataframe of parameter samples
+#'
+#' @export
+#'
+#'
+#' @examples
+#'
+#' ## using lizard dataset (running time more > 5 sec)
+#' \donttest{
+#' data(lizard)
+#' tree<-lizard$tree
+#' traitset<-lizard$traitset
+#' sims<-10
+#' ouqouTrait(tree=tree,traitset=traitset,sims=sims)
+#'}
+
+ouqouTrait<-function(tree=tree,traitset=traitset,sims=sims){
+  prior.params<-HyperParam(tree=tree,traitset=traitset)
+  prior.model.params<-prior.params$prior.model.params
+  prior.reg.params<-prior.params$prior.reg.params
+  prior.params.ouqou <- ouqouprior(prior.model.params = prior.model.params, prior.reg.params = prior.reg.params)
+  sim.ouqou.trait<-array(NA,c(dim(traitset)[1],5,sims))
+  root<-prior.params$root
+  model.params.ouqou<-array(NA,c(5,sims))
+  rownames(model.params.ouqou)<-c("alpha.y","alpha.x","theta.x","sigmasq.x","tau")
+  reg.params.ouqou<-array(NA,c(3,sims))
+  row.names(reg.params.ouqou)<-c("b0", "b1", "b2")
+  y.sumstat.ouqou<-array(NA,c(12,sims))
+  rownames(y.sumstat.ouqou)<-c("y.trait.mean","y.trait.sd","y.trait.median","y.trait.skewness","y.trait.kurtosis","y.pic.trait.mean","y.pic.trait.sd","y.pic.trait.mediam","y.pic.trait.skewness","y.pic.trait.kurtosis","y.pic.trait.K","y.pic.trait.lambda")
+  x1.sumstat.ouqou<-array(NA,c(12,sims))
+  rownames(x1.sumstat.ouqou)<-c("x1.trait.mean","x1.trait.sd","x1.trait.median","x1.trait.skewness","x1.trait.kurtosis","x1.pic.trait.mean","x1.pic.trait.sd","x1.pic.trait.mediam","x1.pic.trait.skewness","x1.pic.trait.kurtosis","x1.pic.trait.K","x1.pic.trait.lambda")
+  x2.sumstat.ouqou<-array(NA,c(12,sims))
+  rownames(x2.sumstat.ouqou)<-c("x2.trait.mean","x2.trait.sd","x2.trait.median","x2.trait.skewness","x2.trait.kurtosis","x2.pic.trait.mean","x2.pic.trait.sd","x2.pic.trait.mediam","x2.pic.trait.skewness","x2.pic.trait.kurtosis","x2.pic.trait.K","x2.pic.trait.lambda")
+  # rownames(post.model.params.ouqou)<-c("alpha.y","alpha.x","theta.x","sigma.x","tau")
+  # row.names(post.reg.params.ouqou)<-c("b0", "b1", "b2")
+  for(simIndex in 1:sims){
+    if(simIndex %%100==0){print(paste("ouqou",simIndex,sep=""))}
+    #simIndex<-2
+    #print(paste("ouqou simIndex= ",simIndex,sep=""))
+    prior.params <- ouqouprior(prior.model.params=prior.model.params,prior.reg.params=prior.reg.params)
+    model.params.ouqou[,simIndex]<-prior.params$model.params#for record only
+    reg.params.ouqou[,simIndex]<-prior.params$reg.params#for record only
+
+    sim.trait <-ouqoumodel(model.params=prior.params$model.params,reg.params=prior.params$reg.params,root=root,tree=tree)
+    sim.ouqou.trait[,1,simIndex]<-sim.trait$y
+    sim.ouqou.trait[,2,simIndex]<-sim.trait$x1
+    sim.ouqou.trait[,3,simIndex]<-sim.trait$x2
+    y.sumstat.ouqou[,simIndex]<- sumstat(trait=sim.trait$y,tree=tree)
+    x1.sumstat.ouqou[,simIndex]<- sumstat(trait=sim.trait$x1,tree=tree)
+    x2.sumstat.ouqou[,simIndex]<- sumstat(trait=sim.trait$x2,tree=tree)
+  }#end of loop
+  sumstat.ouqou <- cbind(t(y.sumstat.ouqou),t(x1.sumstat.ouqou),t(x2.sumstat.ouqou))
+  ouqou.par.sim <- cbind(t(model.params.ouqou),t(reg.params.ouqou))
+  return(list(sumstat.ouqou=sumstat.ouqou,ouqou.par.sim=ouqou.par.sim))
 }

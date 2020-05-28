@@ -4,8 +4,10 @@
 \alias{oubmcirprior}
 \title{Draw prior samples for OUBMCIR model}
 \usage{
-oubmcirprior(prior.model.params = prior.model.params,
-  prior.reg.params = prior.reg.params)
+oubmcirprior(
+  prior.model.params = prior.model.params,
+  prior.reg.params = prior.reg.params
+)
 }
 \arguments{
 \item{prior.model.params}{A vectors of hyper parameters for model parameter containing (alpha.y.min, alpha.y.max) for alpha.y, (sigmasq.x.min, sigmasq.x.max) for sigmasq.x, (alpha.tau.min, alpha.tau.max) for alpha.tau, (theta.tau.min, theta.tau.max) for theta_tau, (sigmasq.tau.min, sigmasq.tau.max) for rate parameter of tau}
